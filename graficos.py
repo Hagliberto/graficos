@@ -53,8 +53,8 @@ def exibir_grafico(uploaded_file=None):
 
     try:
         # Configurações iniciais para o processamento do arquivo
-        with st.sidebar.expander(":blue[**AJUSTAR**] Colunas e Linhas", expanded=True):
-            skip_rows = st.number_input(":orange[**Linhas a Descartar**]", min_value=0, value=0, step=1, help="Escolha a coluna para excluir", placeholder="Escolha a quantidade de linhas")
+        with st.sidebar.expander(":blue[**AJUSTAR**] Colunas e Linhas", expanded=False, icon=":material/tune:"):
+            skip_rows = st.number_input(":blue[**Linhas a Descartar**]", min_value=0, value=0, step=1, help="Escolha a coluna para excluir", placeholder="Escolha a quantidade de linhas")
 
             df = load_data(uploaded_file, skip_rows)
 
@@ -62,20 +62,24 @@ def exibir_grafico(uploaded_file=None):
                 st.error("Tipo de arquivo não suportado ou arquivo vazio.")
                 return
 
-            primary_col = st.selectbox(":orange[**Primeira Coluna**]", options=df.columns, index=0, help="A coluna escolhida será a primeira da planilha")
+            primary_col = st.selectbox(":blue[**Primeira Coluna**]", options=df.columns, index=0, help="A coluna escolhida será a primeira da planilha")
 
             # Filtro para excluir valores nulos e tratar "00:00"
-            filter_col = st.selectbox(":orange[**Excluir Valores Nulos**]", [None] + list(df.columns), help="A coluna escolhida terá as linhas com valores nulos excluídas", placeholder="Escolha uma coluna")
+            filter_col = st.selectbox(":blue[**Excluir Valores Nulos**]", [None] + list(df.columns), help="A coluna escolhida terá as linhas com valores nulos excluídas", placeholder="Escolha uma coluna")
             if filter_col:
                 # Substitui valores "00:00" por NaN para filtrar como nulos
                 df[filter_col] = df[filter_col].replace("00:00", pd.NA)
                 df = df.dropna(subset=[filter_col])
+
+
+            st.subheader(" ", divider="rainbow")
+
     
             # Ordenação e outras opções
-            sort_col = st.selectbox(":orange[**Ordenar por**]", options=df.columns, index=0, help="Escolha a coluna para ordenar", placeholder="Escolha a coluna")
-            sort_ascending = st.checkbox(":orange[**Ordem Crescente**]", value=True)
+            sort_col = st.selectbox(":blue[**Ordenar por**]", options=df.columns, index=0, help="Escolha a coluna para ordenar", placeholder="Escolha a coluna")
+            sort_ascending = st.checkbox(":blue[**Ordem Crescente**]", value=True)
     
-            if st.checkbox(":orange[**Coluna é do tipo Tempo (HH:MM)**]", key="sort_col_time"):
+            if st.checkbox(":blue[**Coluna é do tipo Tempo (HH:MM)**]", key="sort_col_time", help="Ordenar coluna de tempo"):
                 if df[sort_col].apply(lambda x: isinstance(x, str) and ":" in x).all():
                     # Convertendo a coluna de tempo em minutos
                     df[sort_col] = df[sort_col].apply(convert_time_to_minutes)
@@ -96,30 +100,32 @@ def exibir_grafico(uploaded_file=None):
         df = df.fillna("Sem Dados")
 
         # Seleção de colunas para exibição
-        with st.sidebar.expander(":blue[**SELECIONAR**] Colunas para Exibir"):
+        with st.sidebar.expander(":blue[**SELECIONAR**] Colunas para Exibir", expanded=False, icon=":material/rule:"):
             selected_columns = st.multiselect("Selecione as colunas a serem exibidas", df.columns, default=df.columns, placeholder="Quais colunas deseja exibir?", help="As colunas escolhidas aparecerão na planilha")
             df = df[selected_columns]
 
         # Exibição de dados
-        with st.expander("📄 Dados Carregados"):
+        with st.expander(":blue[**DADOS**] CARREGADOS", icon=":material/format_list_bulleted:"):
             # Mostra o DataFrame com os valores nulos excluídos
             edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
 
+        st.subheader("🧮:green[**GRÁFICOS**] Estatísticos", divider="rainbow")
+
         # Configuração de eixos e legendas
-        with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas"):
+        with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False, icon=":material/checklist:"):
             x_axis = st.selectbox(":blue[**➡️ Eixo X**]", edited_df.columns)
             y_axis = st.selectbox(":blue[**⬆️ Eixo Y**]", edited_df.columns)
             color_col = st.selectbox(":rainbow[**Coluna para cor**] _(opcional)_", [None] + list(edited_df.columns))
             text_col = st.selectbox(":blue[**Texto nas Barras**] _(opcional)_", [None] + list(edited_df.columns))
 
         # Renomeação de eixos e legendas
-        with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Legendas"):
+        with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Legendas", expanded=False, icon=":material/format_shapes:"):
             x_label = st.text_input(":blue[**➡️ Eixo X**]", x_axis)
             y_label = st.text_input(":blue[**⬆️ Eixo Y**]", y_axis)
             legend_title = st.text_input(":blue[**Legenda**]", color_col if color_col else "Legenda")
 
         # Escolha do tipo de gráfico
-        with st.sidebar.expander(":blue[**TIPOS DE GRÁFICOS**]"):
+        with st.sidebar.expander(":blue[**TIPOS DE GRÁFICOS**]", expanded=False, icon=":material/monitoring:"):
             chart_type = st.radio("Tipo de Gráfico", ("📊 Barras", "📈 Linhas"), label_visibility="collapsed")
 
         # Criação do gráfico
@@ -131,7 +137,7 @@ def exibir_grafico(uploaded_file=None):
                     y=y_axis,
                     color=color_col,
                     text=text_col,
-                    title="📊 Estatística",
+                    # title="📊 Estatística",
                     labels={x_axis: x_label, y_axis: y_label, color_col: legend_title}
                 )
             else:
@@ -140,7 +146,7 @@ def exibir_grafico(uploaded_file=None):
                     x=x_axis,
                     y=y_axis,
                     color=color_col,
-                    title="📈 Estatística",
+                    # title="📈 Estatística",
                     labels={x_axis: x_label, y_axis: y_label, color_col: legend_title}
                 )
 
@@ -157,9 +163,9 @@ def exibir_grafico(uploaded_file=None):
 
 
 # Upload de arquivo
-with st.sidebar.expander(":blue[**Upload de Arquivo**]", expanded=True):
+with st.sidebar.expander(":red[**CARREGAR ARQUIVO**]", expanded=True, icon=":material/contextual_token_add:"):
     uploaded_file = st.file_uploader(
-        ":green[**Faça upload de um arquivo para exibir o gráfico**]",
+        "📊 :green[**Carregue um arquivo para criar um gráfico**]",
         type=["xlsx", "csv"]
     )
 
