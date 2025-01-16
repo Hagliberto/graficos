@@ -3,11 +3,13 @@ import plotly.express as px
 import streamlit as st
 from observacao import get_markdown  # Importa o Markdown
 
-# Configuração da página
+# Configuração da página deve ser o primeiro comando
 st.set_page_config(
-    page_title="Visualização de Gráficos",
+    page_title="Gráficos",
+    page_icon="📊",
     layout="wide",
-    page_icon="📊"
+    initial_sidebar_state="expanded",
+    menu_items={"About": "Página inicial: 🌍 https://nucleo.streamlit.app/"}
 )
 
 # Função para converter tempo em formato HH:MM para minutos
