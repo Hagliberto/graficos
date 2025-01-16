@@ -1,0 +1,62 @@
+# Bibliotecas para visualização de dados
+altair==5.5.0            # Biblioteca declarativa para visualização estatística
+plotly==5.24.1           # Biblioteca para gráficos interativos
+pydeck==0.9.1            # Para visualizações em 3D, especialmente em mapas
+
+# Manipulação de dados
+pandas==2.2.3            # Biblioteca para manipulação e análise de dados
+numpy==2.2.1             # Biblioteca para computação numérica com suporte a arrays multidimensionais
+
+# Leitura e escrita de arquivos
+openpyxl==3.1.5          # Para ler e escrever arquivos Excel (XLSX)
+et_xmlfile==2.0.0        # Para manipulação de arquivos XML
+jsonschema==4.23.0       # Para validação de dados em JSON
+jsonschema-specifications==2024.10.1 # Especificações para validação de JSON
+
+# Bibliotecas de web e APIs
+requests==2.32.3         # Biblioteca para fazer requisições HTTP
+tornado==6.4.2           # Framework web assíncrono
+watchdog==6.0.0          # Monitoramento de arquivos e diretórios
+
+# Templates e renderização
+Jinja2==3.1.5            # Motor de templates para Python
+MarkupSafe==3.0.2        # Para escapar strings em HTML/XML
+
+# Ferramentas de desenvolvimento
+GitPython==3.1.44        # Interface Python para o Git
+blinker==1.9.0           # Sinalização (event handling) em Python
+tenacity==9.0.0          # Repetição de chamadas de função com falhas
+attrs==24.3.0            # Para criação de classes simples
+packaging==24.2          # Ferramentas para empacotamento de projetos
+toml==0.10.2             # Parser para TOML
+typing_extensions==4.12.2 # Extensões para o módulo de tipagem
+
+# Ferramentas de formatação e estilo
+rich==13.9.4             # Biblioteca para formatação de texto no terminal
+Pygments==2.19.1         # Para colorir a sintaxe de códigos
+
+# Bibliotecas de manipulação de imagens
+pillow==11.1.0           # Biblioteca para manipulação de imagens
+
+# Outras bibliotecas úteis
+charset-normalizer==3.4.1 # Normalização de caracteres
+idna==3.10               # Manipulação de nomes de domínio
+protobuf==5.29.3         # Serialização de dados estruturados
+pyarrow==19.0.0          # Para manipulação de dados em formato Arrow
+narwhals==1.22.0         # Utilidades para manipulação de dados
+jsonschema==4.23.0       # Validação de dados em formato JSON
+referencing==0.35.1      # Para criar referências (citations) em documentos
+
+# Suporte de data e hora
+python-dateutil==2.9.0.post0 # Manipulação de datas e horas
+pytz==2024.2             # Fuso horário
+tzdata==2024.2           # Informações sobre fusos horários
+
+# Utilitários
+click==8.1.8             # Para criação de interfaces de linha de comando
+smmap==5.0.2             # Para gerenciamento de memória
+rpds-py==0.22.3          # Estruturas de dados persistentes
+
+# Dependências para markdown
+markdown-it-py==3.0.0    # Parser de Markdown
+mdurl==0.1.2             # Utilitário para manipulação de URLs em Markdown
