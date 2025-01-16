@@ -1,10 +1,12 @@
 # observacao.py
+import streamlit as st
+
+
 
 def get_markdown():
+    st.success("## Sistema de Criação de Gráficos", icon=":material/analytics:")
+    st.subheader(" ", divider="rainbow")
     return """
-    ## Guia Completo do Sistema de Criação de Gráficos
-    
-    ---
     
     ### 🗂️ **1. Upload de Arquivo**
     - Faça o upload de um arquivo nos formatos **CSV** ou **XLSX** utilizando o botão na barra lateral.
@@ -105,7 +107,4 @@ def get_markdown():
     - Flexibilidade para organizar, editar e personalizar gráficos.
     - Resultados em tempo real.
     
-    ---
-    
-    **Comece agora e aproveite todas as funcionalidades do sistema! 🚀**
     """
