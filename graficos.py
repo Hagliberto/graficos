@@ -120,14 +120,20 @@ def exibir_grafico(uploaded_file=None):
             x_label = st.text_input(":blue[**➡️ Eixo X**]", x_axis)
             y_label = st.text_input(":blue[**⬆️ Eixo Y**]", y_axis)
             legend_title = st.text_input(":blue[**Legenda**]", color_col if color_col else "Legenda")
-
+            
+            # Campo para título do gráfico
+            title = st.text_input(":blue[**Título do Gráfico**]", "Título aqui")
+        
+            # Campo para rodapé do gráfico
+            footer = st.text_input(":blue[**Rodapé do Gráfico**]", "Rodapé aqui")
+        
         # Criação do primeiro gráfico
         if x_axis and y_axis:
             # Configuração do gráfico principal
             labels = {x_axis: x_label, y_axis: y_label}
             if color_col:
                 labels[color_col] = legend_title
-
+        
             # Criação do gráfico principal
             fig = px.bar(
                 edited_df,
@@ -137,7 +143,13 @@ def exibir_grafico(uploaded_file=None):
                 text=text_col,
                 labels=labels
             )
+            
+            # Adicionando título e rodapé ao gráfico
+            fig.update_layout(title=title, annotations=[dict(text=footer, xref="paper", yref="paper", x=0.5, y=-0.15, showarrow=False)])
+        
             st.plotly_chart(fig, use_container_width=True, key="main_graph")
+        
+
 
         # Criação do gráfico TOP dinâmico
         with st.expander("🏆 :green[**GRÁFICO TOP**] Dinâmico", expanded=False, icon=":material/format_list_bulleted:"):
