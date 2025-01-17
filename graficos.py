@@ -44,7 +44,6 @@ def load_data(uploaded_file, skip_rows=0):
         return None
 
 # Função para exibir gráficos e data_editor
-# Função para exibir gráficos e data_editor
 def exibir_grafico(uploaded_file=None):
     if not uploaded_file:
         st.markdown(get_markdown())
@@ -116,6 +115,7 @@ def exibir_grafico(uploaded_file=None):
             text_col = st.selectbox(":blue[**Texto nas Barras**] _(opcional)_", [None] + list(edited_df.columns))
 
         # **Renomeação de eixos e legendas**
+        # **Renomeação de eixos e legendas**
         with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Legendas", expanded=False, icon=":material/format_shapes:"):
             x_label = st.text_input(":blue[**➡️ Eixo X**]", x_axis)
             y_label = st.text_input(":blue[**⬆️ Eixo Y**]", y_axis)
@@ -145,9 +145,25 @@ def exibir_grafico(uploaded_file=None):
             )
             
             # Adicionando título e rodapé ao gráfico
-            fig.update_layout(title=title, annotations=[dict(text=footer, xref="paper", yref="paper", x=0.5, y=-0.15, showarrow=False)])
+            fig.update_layout(
+                title=title,
+                annotations=[
+                    dict(
+                        text=footer,
+                        xref="paper",
+                        yref="paper",
+                        x=0,  # Alinhado à esquerda
+                        y=-0.15,
+                        showarrow=False,
+                        font=dict(size=12),
+                        align="left"  # Alinhamento à esquerda
+                    )
+                ]
+            )
         
             st.plotly_chart(fig, use_container_width=True, key="main_graph")
+        
+        
         
 
 
