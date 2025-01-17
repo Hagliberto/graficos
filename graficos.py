@@ -44,6 +44,7 @@ def load_data(uploaded_file, skip_rows=0):
         return None
 
 # Função para exibir gráficos e data_editor
+# Função para exibir gráficos e data_editor
 def exibir_grafico(uploaded_file=None):
     if not uploaded_file:
         st.markdown(get_markdown())
@@ -80,11 +81,18 @@ def exibir_grafico(uploaded_file=None):
                 sort_col_y = st.selectbox(":blue[**Ordenar eixo Y por**]", options=df.columns, index=0, help="Escolha a coluna para ordenar o eixo Y", placeholder="Escolha a coluna")
                 sort_ascending_y = st.checkbox(":blue[**Ordem crescente para eixo Y**]", value=True, key="sort_y_ascending")
 
-                # Aplicação da ordenação no DataFrame
-                if sort_col_x:
-                    df = df.sort_values(by=sort_col_x, ascending=sort_ascending_x)
-                if sort_col_y:
-                    df = df.sort_values(by=sort_col_y, ascending=sort_ascending_y)
+                # Tratamento especial para colunas de tempo durante a ordenação
+                if "Horas Extras" in [sort_col_x, sort_col_y]:
+                    if sort_col_x == "Horas Extras":
+                        df["Horas Extras Minutos"] = df["Horas Extras"].apply(convert_time_to_minutes)
+                        df = df.sort_values(by="Horas Extras Minutos", ascending=sort_ascending_x)
+                        df["Horas Extras"] = df["Horas Extras Minutos"].apply(minutes_to_time)
+                        df = df.drop(columns=["Horas Extras Minutos"])
+                    elif sort_col_y == "Horas Extras":
+                        df["Horas Extras Minutos"] = df["Horas Extras"].apply(convert_time_to_minutes)
+                        df = df.sort_values(by="Horas Extras Minutos", ascending=sort_ascending_y)
+                        df["Horas Extras"] = df["Horas Extras Minutos"].apply(minutes_to_time)
+                        df = df.drop(columns=["Horas Extras Minutos"])
 
         df = df[[primary_col] + [col for col in df.columns if col != primary_col]]
         df = df.fillna("Sem Dados")
@@ -107,123 +115,65 @@ def exibir_grafico(uploaded_file=None):
             color_col = st.selectbox(":rainbow[**Coluna para cor**] _(opcional)_", [None] + list(edited_df.columns))
             text_col = st.selectbox(":blue[**Texto nas Barras**] _(opcional)_", [None] + list(edited_df.columns))
 
-
         # **Renomeação de eixos e legendas**
         with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Legendas", expanded=False, icon=":material/format_shapes:"):
             x_label = st.text_input(":blue[**➡️ Eixo X**]", x_axis)
             y_label = st.text_input(":blue[**⬆️ Eixo Y**]", y_axis)
             legend_title = st.text_input(":blue[**Legenda**]", color_col if color_col else "Legenda")
 
-
-
-
-        # Criação do gráfico
-        # Criação e renderização do gráfico
+        # Criação do primeiro gráfico
         if x_axis and y_axis:
-            # Configura os labels para o gráfico
+            # Configuração do gráfico principal
             labels = {x_axis: x_label, y_axis: y_label}
             if color_col:
                 labels[color_col] = legend_title
-        
-            try:
-                # Força a conversão da coluna do eixo X para string
-                edited_df[x_axis] = edited_df[x_axis].astype(str)
-        
-                # Força a conversão da coluna do eixo Y para string (se necessário, como em "Matrícula")
-                edited_df[y_axis] = edited_df[y_axis].astype(str)
-        
-                # Caso o eixo Y contenha minutos (como em "Horas Extras"), converta para HH:MM
-                if y_axis == "Horas Extras" or edited_df[y_axis].str.contains(":").any():
-                    edited_df[y_axis] = edited_df[y_axis].apply(convert_time_to_minutes).apply(minutes_to_time)
-        
-                # Caso o eixo X contenha minutos (como em "Horas Extras"), converta para HH:MM
-                if x_axis == "Horas Extras" or edited_df[x_axis].str.contains(":").any():
-                    edited_df[x_axis] = edited_df[x_axis].apply(convert_time_to_minutes).apply(minutes_to_time)
-            except Exception as e:
-                st.warning(f"Erro ao ajustar os eixos: {e}")
-        
-            # Criação do gráfico com rótulos personalizados
+
+            # Criação do gráfico principal
             fig = px.bar(
                 edited_df,
                 x=x_axis,
                 y=y_axis,
                 color=color_col,
                 text=text_col,
-                labels=labels  # Aplica os rótulos personalizados
+                labels=labels
             )
-        
-            # Configura texto das barras (se texto estiver configurado)
-            if text_col:
-                fig.update_traces(texttemplate='%{text}', textposition='outside')
-        
-            # Aplica títulos aos eixos e legenda
-            fig.update_layout(
-                xaxis_title=x_label,  # Força o título do eixo X
-                yaxis_title=y_label,  # Força o título do eixo Y
-                legend_title=dict(text=legend_title)  # Força o título da legenda
+            st.plotly_chart(fig, use_container_width=True, key="main_graph")
+
+        # Criação do gráfico TOP dinâmico
+        with st.expander("🏆 :green[**GRÁFICO TOP**] Dinâmico", expanded=False, icon=":material/format_list_bulleted:"):
+            st.markdown("### :blue[**Escolha o limite para o TOP:**]")
+            top_limit = st.slider(":orange[**Quantidade de itens no TOP:**]", min_value=1, max_value=len(df), value=40, step=1)
+            coluna_top = st.selectbox(":violet[**Selecione a coluna para o TOP:**]", options=df.columns, index=0)
+            ascending_top = st.checkbox(":red[**Ordenar TOP em ordem crescente:**]", value=False)
+
+            # Tratamento especial para "Horas Extras" na coluna TOP
+            if coluna_top == "Horas Extras":
+                df["Horas Extras Minutos"] = df["Horas Extras"].apply(convert_time_to_minutes)
+                top_df = df.sort_values(by="Horas Extras Minutos", ascending=ascending_top).head(top_limit)
+                top_df["Horas Extras"] = top_df["Horas Extras Minutos"].apply(minutes_to_time)
+                top_df = top_df.drop(columns=["Horas Extras Minutos"])
+            else:
+                top_df = df.sort_values(by=coluna_top, ascending=ascending_top).head(top_limit)
+
+            # Criação do gráfico TOP
+            fig_top = px.bar(
+                top_df,
+                x=x_axis,
+                y=y_axis,
+                color=color_col,
+                text=text_col,
+                labels=labels
             )
-        
-            # Renderiza o gráfico no Streamlit
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("Selecione colunas para os eixos X e Y.")
-        
-        
+            st.plotly_chart(fig_top, use_container_width=True, key="top_graph")
+
     except Exception as e:
         st.error(f"Erro ao processar o arquivo: {e}")
-
-
-
-        # Certifique-se de que a coluna selecionada para o eixo Y seja convertida para minutos
-        # Conversão do eixo Y para minutos, se necessário
-        if y_axis:
-            try:
-                # Verifica se a coluna é do tipo string contendo ":"
-                if edited_df[y_axis].dtype == "object" and edited_df[y_axis].str.contains(":").any():
-                    edited_df[y_axis] = edited_df[y_axis].apply(convert_time_to_minutes)
-            except Exception as e:
-                st.warning(f"Erro ao converter a coluna '{y_axis}' para minutos: {e}")
-        
-        # # Criação do gráfico
-        # if x_axis and y_axis:
-        #     # Configura os labels para o gráfico
-        #     labels = {x_axis: x_label, y_axis: y_label}
-        #     if color_col:
-        #         labels[color_col] = legend_title
-        
-        #     # Criação do gráfico de barras com rótulos personalizados
-        #     fig = px.bar(
-        #         edited_df,
-        #         x=x_axis,
-        #         y=y_axis,
-        #         color=color_col,
-        #         text=text_col,
-        #         labels=labels  # Aplica os rótulos personalizados
-        #     )
-        
-        #     # Configura texto das barras (se texto estiver configurado)
-        #     if text_col:
-        #         fig.update_traces(texttemplate='%{text}', textposition='outside')
-        
-        #     # Aplica títulos aos eixos e legenda
-        #     fig.update_layout(
-        #         xaxis_title=x_label,  # Força o título do eixo X
-        #         yaxis_title=y_label,  # Força o título do eixo Y
-        #         legend_title=dict(text=legend_title)  # Força o título da legenda
-        #     )
-        
-        #     # Renderiza o gráfico no Streamlit
-        #     st.plotly_chart(fig, use_container_width=True)
-        # else:
-        #     st.warning("Selecione colunas para os eixos X e Y.")
-        
-        
-        
-
-
+    
 
 
 # Upload de arquivo
+# st.logo("https://img.freepik.com/vetores-gratis/grafico-de-crescimento-dos-negocios-em-ascensao_1308-170777.jpg")
+st.logo("https://i.giphy.com/l378c04F2fjeZ7vH2.webp")
 with st.sidebar.expander(":green[**CARREGAR**] ARQUIVO", expanded=True, icon=":material/contextual_token_add:"):
     uploaded_file = st.file_uploader("📊 :green[**Carregue um arquivo para criar um gráfico**]", type=["xlsx", "csv"])
 
