@@ -224,7 +224,7 @@ def exibir_grafico(uploaded_file=None):
 
 
 # Upload de arquivo
-with st.sidebar.expander(":red[**CARREGAR**] ARQUIVO", expanded=True, icon=":material/contextual_token_add:"):
+with st.sidebar.expander(":green[**CARREGAR**] ARQUIVO", expanded=True, icon=":material/contextual_token_add:"):
     uploaded_file = st.file_uploader("📊 :green[**Carregue um arquivo para criar um gráfico**]", type=["xlsx", "csv"])
 
 if uploaded_file:
