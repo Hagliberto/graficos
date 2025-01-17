@@ -118,17 +118,64 @@ def exibir_grafico(uploaded_file=None):
 
 
         # Criação do gráfico
+        # Criação e renderização do gráfico
         if x_axis and y_axis:
-            fig = px.bar(edited_df, x=x_axis, y=y_axis, color=color_col, text=text_col)
+            # Configura os labels para o gráfico
+            labels = {x_axis: x_label, y_axis: y_label}
+            if color_col:
+                labels[color_col] = legend_title
+        
+            try:
+                # Força a conversão da coluna do eixo X para string
+                edited_df[x_axis] = edited_df[x_axis].astype(str)
+        
+                # Força a conversão da coluna do eixo Y para string (se necessário, como em "Matrícula")
+                edited_df[y_axis] = edited_df[y_axis].astype(str)
+        
+                # Caso o eixo Y contenha minutos (como em "Horas Extras"), converta para HH:MM
+                if y_axis == "Horas Extras" or edited_df[y_axis].str.contains(":").any():
+                    edited_df[y_axis] = edited_df[y_axis].apply(convert_time_to_minutes).apply(minutes_to_time)
+        
+                # Caso o eixo X contenha minutos (como em "Horas Extras"), converta para HH:MM
+                if x_axis == "Horas Extras" or edited_df[x_axis].str.contains(":").any():
+                    edited_df[x_axis] = edited_df[x_axis].apply(convert_time_to_minutes).apply(minutes_to_time)
+            except Exception as e:
+                st.warning(f"Erro ao ajustar os eixos: {e}")
+        
+            # Criação do gráfico com rótulos personalizados
+            fig = px.bar(
+                edited_df,
+                x=x_axis,
+                y=y_axis,
+                color=color_col,
+                text=text_col,
+                labels=labels  # Aplica os rótulos personalizados
+            )
+        
+            # Configura texto das barras (se texto estiver configurado)
+            if text_col:
+                fig.update_traces(texttemplate='%{text}', textposition='outside')
+        
+            # Aplica títulos aos eixos e legenda
+            fig.update_layout(
+                xaxis_title=x_label,  # Força o título do eixo X
+                yaxis_title=y_label,  # Força o título do eixo Y
+                legend_title=dict(text=legend_title)  # Força o título da legenda
+            )
+        
+            # Renderiza o gráfico no Streamlit
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("Selecione colunas para os eixos X e Y.")
+        
+        
     except Exception as e:
         st.error(f"Erro ao processar o arquivo: {e}")
 
 
 
         # Certifique-se de que a coluna selecionada para o eixo Y seja convertida para minutos
+        # Conversão do eixo Y para minutos, se necessário
         if y_axis:
             try:
                 # Verifica se a coluna é do tipo string contendo ":"
@@ -137,37 +184,40 @@ def exibir_grafico(uploaded_file=None):
             except Exception as e:
                 st.warning(f"Erro ao converter a coluna '{y_axis}' para minutos: {e}")
         
-        # Criação do gráfico
-        if x_axis and y_axis:
-            if color_col:
-                fig = px.bar(
-                    edited_df,
-                    x=x_axis,
-                    y=y_axis,
-                    color=color_col,
-                    text=text_col,
-                    labels={x_axis: x_label, y_axis: y_label, color_col: legend_title}  # Rótulos personalizados
-                )
-            else:
-                fig = px.bar(
-                    edited_df,
-                    x=x_axis,
-                    y=y_axis,
-                    text=text_col,
-                    labels={x_axis: x_label, y_axis: y_label}  # Rótulos personalizados
-                )
-            
-            if text_col:
-                fig.update_traces(texttemplate='%{text}', textposition='outside')
+        # # Criação do gráfico
+        # if x_axis and y_axis:
+        #     # Configura os labels para o gráfico
+        #     labels = {x_axis: x_label, y_axis: y_label}
+        #     if color_col:
+        #         labels[color_col] = legend_title
         
-            fig.update_layout(
-                xaxis_title=x_label,  # Título do eixo X
-                yaxis_title=y_label,  # Título do eixo Y
-                legend_title_text=legend_title  # Título da legenda
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("Selecione colunas para os eixos X e Y.")
+        #     # Criação do gráfico de barras com rótulos personalizados
+        #     fig = px.bar(
+        #         edited_df,
+        #         x=x_axis,
+        #         y=y_axis,
+        #         color=color_col,
+        #         text=text_col,
+        #         labels=labels  # Aplica os rótulos personalizados
+        #     )
+        
+        #     # Configura texto das barras (se texto estiver configurado)
+        #     if text_col:
+        #         fig.update_traces(texttemplate='%{text}', textposition='outside')
+        
+        #     # Aplica títulos aos eixos e legenda
+        #     fig.update_layout(
+        #         xaxis_title=x_label,  # Força o título do eixo X
+        #         yaxis_title=y_label,  # Força o título do eixo Y
+        #         legend_title=dict(text=legend_title)  # Força o título da legenda
+        #     )
+        
+        #     # Renderiza o gráfico no Streamlit
+        #     st.plotly_chart(fig, use_container_width=True)
+        # else:
+        #     st.warning("Selecione colunas para os eixos X e Y.")
+        
+        
         
 
 
