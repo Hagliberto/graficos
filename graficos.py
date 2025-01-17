@@ -7,7 +7,7 @@ from config_page import config_page
 # Configuração da página deve ser o primeiro comando
 st.set_page_config(
     page_title="Gráficos",
-    page_icon="📊",
+    page_icon="https://img.freepik.com/vetores-gratis/grafico-de-crescimento-dos-negocios-em-ascensao_1308-170777.jpg",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={"About": "Página inicial: 🌍 https://nucleo.streamlit.app/"}
@@ -173,8 +173,24 @@ def exibir_grafico(uploaded_file=None):
 
 # Upload de arquivo
 # st.logo("https://img.freepik.com/vetores-gratis/grafico-de-crescimento-dos-negocios-em-ascensao_1308-170777.jpg")
-st.logo("https://i.giphy.com/l378c04F2fjeZ7vH2.webp")
+st.logo("https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGI1NXBsY2NoOHE4Z2k0NzIwcmk2eHRhcWQxenllaWU3bzM1dHd6diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/gjrOAylhpZm3dLnO5J/giphy.gif", size="large")
+# st.sidebar.image(
+#     "https://elbibliote.com/libro-pedia/manual_matematica/wp-content/uploads/2020/07/TH-Financial-business-chart-and-graphs476769843.jpg",
+#     width=200  # Ajuste a largura da imagem conforme necessário
+# )
+
 with st.sidebar.expander(":green[**CARREGAR**] ARQUIVO", expanded=True, icon=":material/contextual_token_add:"):
+    # Adiciona a imagem centralizada usando HTML
+    st.markdown(
+        """
+        <div style="text-align: center;">
+            <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGI1NXBsY2NoOHE4Z2k0NzIwcmk2eHRhcWQxenllaWU3bzM1dHd6diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/gjrOAylhpZm3dLnO5J/giphy.gif" alt="Gráfico" style="width:300px;">
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    # Adiciona o carregador de arquivos
     uploaded_file = st.file_uploader("📊 :green[**Carregue um arquivo para criar um gráfico**]", type=["xlsx", "csv"])
 
 if uploaded_file:
