@@ -13,9 +13,7 @@ st.set_page_config(
     menu_items={"About": "Página inicial: 🌍 https://nucleo.streamlit.app/"}
 )
 
-
 config_page()
-
 
 # Função para converter tempo em formato HH:MM para minutos
 @st.cache_data
@@ -55,7 +53,6 @@ def exibir_grafico(uploaded_file=None):
         # Configurações iniciais para o processamento do arquivo
         with st.sidebar.expander(":blue[**AJUSTAR**] Colunas e Linhas", expanded=False, icon=":material/tune:"):
             skip_rows = st.number_input(":blue[**Linhas a Descartar**]", min_value=0, value=0, step=1, help="Escolha a coluna para excluir", placeholder="Escolha a quantidade de linhas")
-
             df = load_data(uploaded_file, skip_rows)
 
             if df is None or df.empty:
@@ -71,32 +68,25 @@ def exibir_grafico(uploaded_file=None):
                 df[filter_col] = df[filter_col].replace("00:00", pd.NA)
                 df = df.dropna(subset=[filter_col])
 
-
             st.subheader(" ", divider="rainbow")
 
-    
-            # Ordenação e outras opções
-            sort_col = st.selectbox(":blue[**Ordenar por**]", options=df.columns, index=0, help="Escolha a coluna para ordenar", placeholder="Escolha a coluna")
-            sort_ascending = st.checkbox(":blue[**Ordem Crescente**]", value=True)
-    
-            if st.checkbox(":blue[**Coluna é do tipo Tempo (HH:MM)**]", key="sort_col_time", help="Ordenar coluna de tempo"):
-                if df[sort_col].apply(lambda x: isinstance(x, str) and ":" in x).all():
-                    # Convertendo a coluna de tempo em minutos
-                    df[sort_col] = df[sort_col].apply(convert_time_to_minutes)
-                    df[f"{sort_col}_formatado"] = df[sort_col].apply(minutes_to_time)  # Coluna formatada de volta para HH:MM
-                else:
-                    st.warning("A coluna selecionada contém valores inválidos ou no formato errado. Certifique-se de que todos os valores estão no formato HH:MM.")
+            # Configuração de ordenação para os eixos
+            with st.sidebar.expander(":blue[**ORDENAÇÃO**] Eixos", expanded=False, icon=":material/sort:"):
+                # Ordenação do eixo X
+                sort_col_x = st.selectbox(":blue[**Ordenar eixo X por**]", options=df.columns, index=0, help="Escolha a coluna para ordenar o eixo X", placeholder="Escolha a coluna")
+                sort_ascending_x = st.checkbox(":blue[**Ordem crescente para eixo X**]", value=True, key="sort_x_ascending")
 
-        # Ordenar com base na coluna de tempo convertida
-        df = df.sort_values(by=sort_col, ascending=sort_ascending)
+                # Ordenação do eixo Y
+                sort_col_y = st.selectbox(":blue[**Ordenar eixo Y por**]", options=df.columns, index=0, help="Escolha a coluna para ordenar o eixo Y", placeholder="Escolha a coluna")
+                sort_ascending_y = st.checkbox(":blue[**Ordem crescente para eixo Y**]", value=True, key="sort_y_ascending")
 
-        # Coloque a coluna formatada de volta no DataFrame
-        if f"{sort_col}_formatado" in df.columns:
-            df[sort_col] = df[f"{sort_col}_formatado"]  # Use a coluna formatada para exibição
+                # Aplicação da ordenação no DataFrame
+                if sort_col_x:
+                    df = df.sort_values(by=sort_col_x, ascending=sort_ascending_x)
+                if sort_col_y:
+                    df = df.sort_values(by=sort_col_y, ascending=sort_ascending_y)
 
         df = df[[primary_col] + [col for col in df.columns if col != primary_col]]
-
-        # Substitui valores nulos (None) por "Sem Dados"
         df = df.fillna("Sem Dados")
 
         # Seleção de colunas para exibição
@@ -106,7 +96,6 @@ def exibir_grafico(uploaded_file=None):
 
         # Exibição de dados
         with st.expander(":blue[**DADOS**] CARREGADOS", icon=":material/format_list_bulleted:"):
-            # Mostra o DataFrame com os valores nulos excluídos
             edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
 
         st.subheader("🧮:green[**GRÁFICOS**] Estatísticos", divider="rainbow")
@@ -118,56 +107,75 @@ def exibir_grafico(uploaded_file=None):
             color_col = st.selectbox(":rainbow[**Coluna para cor**] _(opcional)_", [None] + list(edited_df.columns))
             text_col = st.selectbox(":blue[**Texto nas Barras**] _(opcional)_", [None] + list(edited_df.columns))
 
-        # Renomeação de eixos e legendas
+
+        # **Renomeação de eixos e legendas**
         with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Legendas", expanded=False, icon=":material/format_shapes:"):
             x_label = st.text_input(":blue[**➡️ Eixo X**]", x_axis)
             y_label = st.text_input(":blue[**⬆️ Eixo Y**]", y_axis)
             legend_title = st.text_input(":blue[**Legenda**]", color_col if color_col else "Legenda")
 
-        # Escolha do tipo de gráfico
-        with st.sidebar.expander(":blue[**TIPOS DE GRÁFICOS**]", expanded=False, icon=":material/monitoring:"):
-            chart_type = st.radio("Tipo de Gráfico", ("📊 Barras", "📈 Linhas"), label_visibility="collapsed")
+
+
 
         # Criação do gráfico
         if x_axis and y_axis:
-            if chart_type == "📊 Barras":
+            fig = px.bar(edited_df, x=x_axis, y=y_axis, color=color_col, text=text_col)
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("Selecione colunas para os eixos X e Y.")
+    except Exception as e:
+        st.error(f"Erro ao processar o arquivo: {e}")
+
+
+
+        # Certifique-se de que a coluna selecionada para o eixo Y seja convertida para minutos
+        if y_axis:
+            try:
+                # Verifica se a coluna é do tipo string contendo ":"
+                if edited_df[y_axis].dtype == "object" and edited_df[y_axis].str.contains(":").any():
+                    edited_df[y_axis] = edited_df[y_axis].apply(convert_time_to_minutes)
+            except Exception as e:
+                st.warning(f"Erro ao converter a coluna '{y_axis}' para minutos: {e}")
+        
+        # Criação do gráfico
+        if x_axis and y_axis:
+            if color_col:
                 fig = px.bar(
                     edited_df,
                     x=x_axis,
                     y=y_axis,
                     color=color_col,
                     text=text_col,
-                    # title="📊 Estatística",
-                    labels={x_axis: x_label, y_axis: y_label, color_col: legend_title}
+                    labels={x_axis: x_label, y_axis: y_label, color_col: legend_title}  # Rótulos personalizados
                 )
             else:
-                fig = px.line(
+                fig = px.bar(
                     edited_df,
                     x=x_axis,
                     y=y_axis,
-                    color=color_col,
-                    # title="📈 Estatística",
-                    labels={x_axis: x_label, y_axis: y_label, color_col: legend_title}
+                    text=text_col,
+                    labels={x_axis: x_label, y_axis: y_label}  # Rótulos personalizados
                 )
-
-            if chart_type == "📊 Barras" and text_col:
+            
+            if text_col:
                 fig.update_traces(texttemplate='%{text}', textposition='outside')
-
-            fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
+        
+            fig.update_layout(
+                xaxis_title=x_label,  # Título do eixo X
+                yaxis_title=y_label,  # Título do eixo Y
+                legend_title_text=legend_title  # Título da legenda
+            )
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("Selecione colunas para os eixos X e Y.")
+        
 
-    except Exception as e:
-        st.error(f"Erro ao processar o arquivo: {e}")
+
 
 
 # Upload de arquivo
 with st.sidebar.expander(":red[**CARREGAR ARQUIVO**]", expanded=True, icon=":material/contextual_token_add:"):
-    uploaded_file = st.file_uploader(
-        "📊 :green[**Carregue um arquivo para criar um gráfico**]",
-        type=["xlsx", "csv"]
-    )
+    uploaded_file = st.file_uploader("📊 :green[**Carregue um arquivo para criar um gráfico**]", type=["xlsx", "csv"])
 
 if uploaded_file:
     exibir_grafico(uploaded_file)
