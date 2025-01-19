@@ -33,6 +33,7 @@ def ordenar_coluna(df, coluna, ascending):
         df = df.sort_values(by=coluna, ascending=ascending, key=lambda col: col.str.lower())
     return df
 
+
 config_page()
 
 # Função para converter tempo em formato HH:MM para minutos
@@ -64,6 +65,7 @@ def convert_time_to_minutes(time_str):
         return None
 
 
+
 # Função para converter minutos de volta para o formato HH:MM
 @st.cache_data
 def minutes_to_time(minutes):
@@ -93,111 +95,208 @@ def generate_hovertemplate(df, selected_columns):
     return "".join(hover_text) + "<extra></extra>"
 
 
-def process_multiple_files(uploaded_files):
-    dataframes = {}
-    for idx, uploaded_file in enumerate(uploaded_files):
-        with st.sidebar.expander(f":blue[**AJUSTAR ARQUIVO {idx+1}**]", expanded=False):
-            skip_rows = st.number_input(f":blue[**Linhas a Descartar** - Arquivo {idx+1}]", min_value=0, value=0, step=1)
-            df = load_data(uploaded_file, skip_rows)
-
-            if df is None or df.empty:
-                st.warning(f"⚠️ Arquivo {uploaded_file.name} está vazio ou não é suportado.")
-                continue
-
-            primary_col = st.selectbox(f":blue[**Primeira Coluna - Arquivo {idx+1}**]", options=df.columns, index=0)
-            if primary_col:
-                df = df[[primary_col] + [col for col in df.columns if col != primary_col]]
-
-            filter_col = st.selectbox(f":blue[**Excluir Valores Nulos - Arquivo {idx+1}**]", [None] + list(df.columns))
-            if filter_col:
-                df[filter_col] = df[filter_col].replace("00:00", pd.NA)
-                df = df.dropna(subset=[filter_col]).reset_index(drop=True)
-
-            sort_col_x = st.selectbox(f":blue[**Ordenar eixo X por - Arquivo {idx+1}**]", options=df.columns, index=0)
-            sort_ascending_x = st.checkbox(f":blue[**Ordem crescente - Arquivo {idx+1}**]", value=True)
-            if sort_col_x:
-                df = ordenar_coluna(df, sort_col_x, sort_ascending_x)
-
-            dataframes[uploaded_file.name] = df
-
-    return dataframes
 
 # Função para exibir gráficos e data_editor
-def exibir_grafico(dataframes):
-    if not dataframes:
+# Função para exibir gráficos e data_editor
+def exibir_grafico(uploaded_file=None):
+    if not uploaded_file:
         st.markdown(get_markdown())
         return
 
-    # Unindo os DataFrames com base em uma coluna em comum
-    common_col = st.sidebar.selectbox(
-        ":blue[**Coluna Comum para União**]", options=list(dataframes.values())[0].columns
+    try:
+        # Configuração inicial
+        with st.sidebar.expander(":blue[**AJUSTAR**] Colunas e Linhas", expanded=False, icon=":material/tune:"):
+            skip_rows = st.number_input(":blue[**Linhas a Descartar**]", min_value=0, value=0, step=1, help="Escolha a coluna para excluir")
+            df = load_data(uploaded_file, skip_rows)
+
+            if df is None or df.empty:
+                st.error("Tipo de arquivo não suportado ou arquivo vazio.")
+                return
+
+            # Primeira Coluna
+            primary_col = st.selectbox(":blue[**Primeira Coluna**]", options=df.columns, index=0)
+            if primary_col:
+                df = df[[primary_col] + [col for col in df.columns if col != primary_col]]
+
+            # Filtro de valores nulos
+            filter_col = st.selectbox(":blue[**Excluir Valores Nulos**]", [None] + list(df.columns))
+            if filter_col:
+                df[filter_col] = df[filter_col].replace("00:00", pd.NA)
+                df = df.dropna(subset=[filter_col])
+                df = df.reset_index(drop=True)
+
+            # Ordenação do eixo X
+            sort_col_x = st.selectbox(":blue[**Ordenar eixo X por**]", options=df.columns, index=0)
+            sort_ascending_x = st.checkbox(":blue[**Ordem crescente para eixo X**]", value=True)
+            if sort_col_x:
+                df = ordenar_coluna(df, sort_col_x, sort_ascending_x)
+
+        # Seleção de Colunas para Exibição
+        with st.sidebar.expander(":blue[**SELECIONAR**] Colunas para Exibir", expanded=False, icon=":material/rule:"):
+            selected_columns = st.multiselect(
+                ":red[**Exibir colunas**]",
+                df.columns,
+                default=df.columns,
+                placeholder="Selecione as colunas para exibir",
+                help="Selecione as colunas que deseja exibir no gráfico.",
+                key="selected_columns"
+            )
+
+        # Filtra o DataFrame com base nas colunas selecionadas
+        if selected_columns:
+            df_filtered = df[selected_columns]
+        else:
+            df_filtered = df  # Se nenhuma coluna for selecionada, mostra todas as colunas
+
+        # Configuração de Gráficos
+        # Configuração de Gráficos
+        st.subheader("🧮:green[**GRÁFICOS**] Estatísticos", divider="rainbow")
+        with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False, icon=":material/checklist:"):
+            x_axis = st.selectbox(":blue[**➡️ Eixo X**]", df_filtered.columns)
+            y_axis = st.selectbox(":blue[**⬆️ Eixo Y**]", df_filtered.columns)
+            color_col = st.selectbox(":rainbow[**Coluna para cor**] _(opcional)_", [None] + list(df_filtered.columns))
+
+            # Novo multiselect para texto nas barras
+            text_cols = st.multiselect(
+                ":blue[**Texto nas Barras**] _(opcional)_",
+                options=df_filtered.columns,
+                default=None,
+                help="Selecione uma ou mais colunas para exibir como texto nas barras"
+            )
+
+        # Personalizar o texto exibido dentro das barras
+        # Personalizar o texto exibido dentro das barras
+        if text_cols:
+            def format_text(row):
+                # Formatar o texto com o nome da coluna em preto e o valor em outra cor
+                formatted_text = "<br>".join([
+                    f"<b style='color:black'>{col}:</b> <span style='color:blue'>{row[col]}</span>"
+                    for col in text_cols
+                ])
+                return formatted_text
+        
+            # Adicionar coluna de texto formatado ao DataFrame
+            df_filtered["Texto Barras"] = df_filtered.apply(format_text, axis=1)
+            text_col = "Texto Barras"
+        else:
+            # Caso nenhuma coluna seja selecionada, usar o eixo X
+            df_filtered["Texto Barras"] = df_filtered[x_axis]
+            text_col = "Texto Barras"
+        
+        
+
+
+        with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Legendas", expanded=False, icon=":material/format_shapes:"):
+            x_label = st.text_input(":blue[**➡️ Eixo X**]", value=x_axis, help="Insira um rótulo para o eixo X")
+            y_label = st.text_input(":blue[**⬆️ Eixo Y**]", value=y_axis, help="Insira um rótulo para o eixo Y")
+            legend_title = st.text_input(":blue[**Legenda**]", value=color_col if color_col else "Legenda", help="Insira um título para a legenda")
+            title = st.text_input(":blue[**Título do Gráfico**]", value="📊 Estatísticas", help="Insira um título para o gráfico")
+
+        # Exibição de Dados
+        with st.expander(":blue[**DADOS**] CARREGADOS", icon=":material/format_list_bulleted:"):
+            st.data_editor(df_filtered.reset_index(drop=True), use_container_width=True, num_rows="dynamic")
+
+        # Criação do Gráfico Principal
+        if x_axis and y_axis:
+            labels = {x_axis: x_label, y_axis: y_label}
+            if color_col:
+                labels[color_col] = legend_title
+        
+            try:
+                # Gera o texto formatado para exibição nas barras
+                if text_cols:
+                    def format_text(row):
+                        # Nome da coluna em preto e valor em azul, alinhados verticalmente
+                        return "<br>".join([
+                            f"<b style='color:black'>{col}:</b> <span style='color:blue'>{int(row[col]) if isinstance(row[col], float) and row[col].is_integer() else row[col]}</span>"
+                            for col in text_cols
+                        ])
+        
+                    # Adiciona a coluna com texto formatado
+                    df_filtered["Texto Barras"] = df_filtered.apply(format_text, axis=1)
+                    text_col = "Texto Barras"
+                else:
+                    text_col = None
+        
+                # Lógica para criar gráfico
+                fig = px.bar(
+                    df_filtered,
+                    x=x_axis,
+                    y=y_axis,
+                    color=color_col,
+                    text=text_col,  # Usa o texto formatado ou o eixo X
+                    labels=labels,
+                    custom_data=df_filtered[selected_columns]  # Passa as colunas selecionadas para o customdata
+                )
+                
+                # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
+                fig.update_traces(
+                    texttemplate='%{text}',  # Renderiza o texto formatado dentro das barras
+                    textposition='inside',  # Texto dentro das barras
+                    insidetextanchor='middle',  # Centraliza verticalmente
+                    textfont=dict(size=12),  # Define o tamanho da fonte
+                    hovertemplate=generate_hovertemplate(df_filtered, selected_columns)  # Configura o tooltip dinamicamente e colorido
+                )
+                
+                
+        
+                # Renderizar o gráfico
+                st.plotly_chart(fig, use_container_width=True, key="main_graph")
+        
+            except KeyError as e:
+                st.error(f"Erro ao criar o gráfico: A coluna {e} não foi encontrada no dataframe. Verifique as colunas selecionadas.")
+            except ValueError as e:
+                st.error(f"Erro de valor: {str(e)}. Verifique os dados e tente novamente.")
+            except Exception as e:
+                st.error(f"Erro inesperado: {str(e)}. Tente novamente ou contate o suporte.")
+        
+        # Gráfico TOP Dinâmico
+        with st.expander("🏆 :green[**GRÁFICO TOP**] Dinâmico", expanded=False, icon=":material/format_list_bulleted:"):
+            top_limit = st.slider("Quantidade de itens no TOP:", min_value=1, max_value=len(df_filtered), value=10)
+            ascending_top = st.checkbox("Ordem crescente", value=False)
+            coluna_top = st.selectbox("Coluna para TOP", df_filtered.columns)
+
+            if coluna_top:
+                top_df = ordenar_coluna(df_filtered, coluna_top, ascending_top).head(top_limit)
+                fig_top = px.bar(
+                    top_df,
+                    x=x_axis,
+                    y=y_axis,
+                    color=color_col,
+                    text=text_col,
+                    labels=labels
+                )
+                fig_top.update_layout(title=f"Top {top_limit} - {title}")
+                st.plotly_chart(fig_top, use_container_width=True, key="top_graph")
+
+    except Exception as e:
+        st.error(f"Erro ao processar o arquivo: {e}")
+
+
+
+# Upload de arquivo
+# st.logo("https://img.freepik.com/vetores-gratis/grafico-de-crescimento-dos-negocios-em-ascensao_1308-170777.jpg")
+st.logo("https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGI1NXBsY2NoOHE4Z2k0NzIwcmk2eHRhcWQxenllaWU3bzM1dHd6diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/gjrOAylhpZm3dLnO5J/giphy.gif", size="large")
+# st.sidebar.image(
+#     "https://elbibliote.com/libro-pedia/manual_matematica/wp-content/uploads/2020/07/TH-Financial-business-chart-and-graphs476769843.jpg",
+#     width=200  # Ajuste a largura da imagem conforme necessário
+# )
+
+with st.sidebar.expander(":green[**CARREGAR**] ARQUIVO", expanded=True, icon=":material/contextual_token_add:"):
+    # Adiciona a imagem centralizada usando HTML
+    st.markdown(
+        """
+        <div style="text-align: center;">
+            <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGI1NXBsY2NoOHE4Z2k0NzIwcmk2eHRhcWQxenllaWU3bzM1dHd6diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/gjrOAylhpZm3dLnO5J/giphy.gif" alt="Gráfico" style="width:300px;">
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
+    
+    # Adiciona o carregador de arquivos
+    uploaded_file = st.file_uploader("📊 :green[**Carregue um arquivo para criar um gráfico**]", type=["xlsx", "csv"])
 
-    combined_df = pd.concat(dataframes.values(), axis=0, join='outer', ignore_index=True)
-
-    # Seleção de Colunas para Exibição
-    with st.sidebar.expander(":blue[**SELECIONAR**] Colunas para Exibir", expanded=False):
-        selected_columns = st.multiselect(
-            ":red[**Exibir colunas**]",
-            combined_df.columns,
-            default=combined_df.columns,
-            placeholder="Selecione as colunas para exibir",
-            help="Selecione as colunas que deseja exibir no gráfico."
-        )
-
-    # Filtra o DataFrame com base nas colunas selecionadas
-    if selected_columns:
-        combined_df = combined_df[selected_columns]
-
-    st.subheader("🧮:green[**GRÁFICOS**] Estatísticos", divider="rainbow")
-
-    # Configuração de Gráficos
-    with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False):
-        x_axis = st.selectbox(":blue[**➡️ Eixo X**]", combined_df.columns)
-        y_axis = st.selectbox(":blue[**⬆️ Eixo Y**]", combined_df.columns)
-        color_col = st.selectbox(":rainbow[**Coluna para cor**] _(opcional)_", [None] + list(combined_df.columns))
-
-        text_cols = st.sidebar.multiselect(
-            ":blue[**Texto nas Barras**] _(opcional)_",
-            options=combined_df.columns,
-            default=None,
-            help="Selecione uma ou mais colunas para exibir como texto nas barras"
-        )
-
-    if x_axis and y_axis:
-        try:
-            combined_df["Texto Barras"] = combined_df.apply(
-                lambda row: "<br>".join(
-                    [f"<b style='color:black'>{col}:</b> <span style='color:blue'>{row[col]}</span>" for col in text_cols]
-                ), axis=1
-            )
-
-            fig = px.bar(
-                combined_df,
-                x=x_axis,
-                y=y_axis,
-                color=color_col,
-                text="Texto Barras",
-                custom_data=combined_df[selected_columns]
-            )
-
-            fig.update_traces(
-                texttemplate='%{text}',
-                textposition='inside',
-                hovertemplate=generate_hovertemplate(combined_df, selected_columns)
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
-        except Exception as e:
-            st.error(f"Erro ao criar gráfico: {e}")
-
-uploaded_files = st.sidebar.file_uploader(
-    ":green[**Carregar Arquivos**]", type=["xlsx", "csv"], accept_multiple_files=True
-)
-
-if uploaded_files:
-    dataframes = process_multiple_files(uploaded_files)
-    exibir_grafico(dataframes)
+if uploaded_file:
+    exibir_grafico(uploaded_file)
 else:
-    st.markdown(get_markdown())
+    exibir_grafico()
