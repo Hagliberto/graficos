@@ -263,13 +263,8 @@ def exibir_grafico(uploaded_file=None):
                     x=x_axis,
                     y=y_axis,
                     color=color_col,
-                    text=text_col,  # Usa o texto formatado
+                    text=text_col,
                     labels=labels
-                )
-                fig_top.update_traces(
-                    texttemplate='%{text}',
-                    textposition='inside',
-                    hovertemplate=generate_hovertemplate(top_df, selected_columns)  # Configura o tooltip no gráfico TOP
                 )
                 fig_top.update_layout(title=f"Top {top_limit} - {title}")
                 st.plotly_chart(fig_top, use_container_width=True, key="top_graph")
