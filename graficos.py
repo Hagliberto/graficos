@@ -13,16 +13,56 @@ st.set_page_config(
     menu_items={"About": "Página inicial: 🌍 https://nucleo.streamlit.app/"}
 )
 
+# Função para verificar e ordenar colunas, incluindo diferentes tipos de dados
+def ordenar_coluna(df, coluna, ascending):
+    if coluna == "Horas Extras":
+        # Tratamento para colunas de tempo (HH:MM)
+        df["Horas Extras Minutos"] = df["Horas Extras"].apply(convert_time_to_minutes)
+        df = df.sort_values(by="Horas Extras Minutos", ascending=ascending)
+        df["Horas Extras"] = df["Horas Extras Minutos"].apply(minutes_to_time)
+        df = df.drop(columns=["Horas Extras Minutos"])
+    elif pd.api.types.is_numeric_dtype(df[coluna]):
+        # Ordenação para colunas numéricas
+        df = df.sort_values(by=coluna, ascending=ascending)
+    elif pd.api.types.is_datetime64_any_dtype(df[coluna]):
+        # Ordenação para colunas de datas
+        df[coluna] = pd.to_datetime(df[coluna], errors='coerce')
+        df = df.sort_values(by=coluna, ascending=ascending)
+    else:
+        # Ordenação para colunas de strings
+        df = df.sort_values(by=coluna, ascending=ascending, key=lambda col: col.str.lower())
+    return df
+
 config_page()
+
+# Função para converter tempo em formato HH:MM para minutos
+# Variável global para controlar mensagens de erro
+error_displayed = False
 
 # Função para converter tempo em formato HH:MM para minutos
 @st.cache_data
 def convert_time_to_minutes(time_str):
+    global error_displayed
     try:
         hours, minutes = map(int, time_str.split(":"))
         return hours * 60 + minutes
-    except ValueError:
+    except AttributeError:
+        if not error_displayed:
+            st.error(
+                "⚠️ Erro ao processar os dados: Um valor numérico foi encontrado na coluna de tempo. "
+                "Certifique-se de que todos os valores na coluna estejam no formato HH:MM."
+            )
+            error_displayed = True  # Marca o erro como exibido
         return None
+    except ValueError:
+        if not error_displayed:
+            st.error(
+                "⚠️ Erro ao processar os dados: Um valor inesperado foi encontrado na coluna de tempo. "
+                "Certifique-se de que todos os valores estejam no formato correto (HH:MM)."
+            )
+            error_displayed = True  # Marca o erro como exibido
+        return None
+
 
 # Função para converter minutos de volta para o formato HH:MM
 @st.cache_data
@@ -43,192 +83,121 @@ def load_data(uploaded_file, skip_rows=0):
     else:
         return None
 
-# Função para exibir gráficos e data_editor
-def exibir_grafico(uploaded_file=None):
-    if not uploaded_file:
-        st.markdown(get_markdown())
-        return
+# Gera o texto formatado para o tooltip dinamicamente e colorido
+def generate_hovertemplate(df, selected_columns):
+    hover_text = []
+    for i, col in enumerate(selected_columns):
+        hover_text.append(
+            f"<b style='color:black'>{col}:</b> <span style='color:blue'>%{{customdata[{i}]}}</span><br>"
+        )
+    return "".join(hover_text) + "<extra></extra>"
 
-    try:
-        # Configurações iniciais para o processamento do arquivo
-        with st.sidebar.expander(":blue[**AJUSTAR**] Colunas e Linhas", expanded=False, icon=":material/tune:"):
-            skip_rows = st.number_input(":blue[**Linhas a Descartar**]", min_value=0, value=0, step=1, help="Escolha a coluna para excluir", placeholder="Escolha a quantidade de linhas")
+
+def process_multiple_files(uploaded_files):
+    dataframes = {}
+    for idx, uploaded_file in enumerate(uploaded_files):
+        with st.sidebar.expander(f":blue[**AJUSTAR ARQUIVO {idx+1}**]", expanded=False):
+            skip_rows = st.number_input(f":blue[**Linhas a Descartar** - Arquivo {idx+1}]", min_value=0, value=0, step=1)
             df = load_data(uploaded_file, skip_rows)
 
             if df is None or df.empty:
-                st.error("Tipo de arquivo não suportado ou arquivo vazio.")
-                return
+                st.warning(f"⚠️ Arquivo {uploaded_file.name} está vazio ou não é suportado.")
+                continue
 
-            primary_col = st.selectbox(":blue[**Primeira Coluna**]", options=df.columns, index=0, help="A coluna escolhida será a primeira da planilha")
+            primary_col = st.selectbox(f":blue[**Primeira Coluna - Arquivo {idx+1}**]", options=df.columns, index=0)
+            if primary_col:
+                df = df[[primary_col] + [col for col in df.columns if col != primary_col]]
 
-            # Filtro para excluir valores nulos e tratar "00:00"
-            filter_col = st.selectbox(":blue[**Excluir Valores Nulos**]", [None] + list(df.columns), help="A coluna escolhida terá as linhas com valores nulos excluídas", placeholder="Escolha uma coluna")
+            filter_col = st.selectbox(f":blue[**Excluir Valores Nulos - Arquivo {idx+1}**]", [None] + list(df.columns))
             if filter_col:
-                # Substitui valores "00:00" por NaN para filtrar como nulos
                 df[filter_col] = df[filter_col].replace("00:00", pd.NA)
-                df = df.dropna(subset=[filter_col])
+                df = df.dropna(subset=[filter_col]).reset_index(drop=True)
 
-            st.subheader(" ", divider="rainbow")
+            sort_col_x = st.selectbox(f":blue[**Ordenar eixo X por - Arquivo {idx+1}**]", options=df.columns, index=0)
+            sort_ascending_x = st.checkbox(f":blue[**Ordem crescente - Arquivo {idx+1}**]", value=True)
+            if sort_col_x:
+                df = ordenar_coluna(df, sort_col_x, sort_ascending_x)
 
-            # Configuração de ordenação para os eixos
-            with st.sidebar.expander(":blue[**ORDENAÇÃO**] Eixos", expanded=False, icon=":material/sort:"):
-                # Ordenação do eixo X
-                sort_col_x = st.selectbox(":blue[**Ordenar eixo X por**]", options=df.columns, index=0, help="Escolha a coluna para ordenar o eixo X", placeholder="Escolha a coluna")
-                sort_ascending_x = st.checkbox(":blue[**Ordem crescente para eixo X**]", value=True, key="sort_x_ascending")
+            dataframes[uploaded_file.name] = df
 
-                # Ordenação do eixo Y
-                sort_col_y = st.selectbox(":blue[**Ordenar eixo Y por**]", options=df.columns, index=0, help="Escolha a coluna para ordenar o eixo Y", placeholder="Escolha a coluna")
-                sort_ascending_y = st.checkbox(":blue[**Ordem crescente para eixo Y**]", value=True, key="sort_y_ascending")
+    return dataframes
 
-                # Tratamento especial para colunas de tempo durante a ordenação
-                if "Horas Extras" in [sort_col_x, sort_col_y]:
-                    if sort_col_x == "Horas Extras":
-                        df["Horas Extras Minutos"] = df["Horas Extras"].apply(convert_time_to_minutes)
-                        df = df.sort_values(by="Horas Extras Minutos", ascending=sort_ascending_x)
-                        df["Horas Extras"] = df["Horas Extras Minutos"].apply(minutes_to_time)
-                        df = df.drop(columns=["Horas Extras Minutos"])
-                    elif sort_col_y == "Horas Extras":
-                        df["Horas Extras Minutos"] = df["Horas Extras"].apply(convert_time_to_minutes)
-                        df = df.sort_values(by="Horas Extras Minutos", ascending=sort_ascending_y)
-                        df["Horas Extras"] = df["Horas Extras Minutos"].apply(minutes_to_time)
-                        df = df.drop(columns=["Horas Extras Minutos"])
+# Função para exibir gráficos e data_editor
+def exibir_grafico(dataframes):
+    if not dataframes:
+        st.markdown(get_markdown())
+        return
 
-        df = df[[primary_col] + [col for col in df.columns if col != primary_col]]
-        df = df.fillna("Sem Dados")
-
-        # Seleção de colunas para exibição
-        with st.sidebar.expander(":blue[**SELECIONAR**] Colunas para Exibir", expanded=False, icon=":material/rule:"):
-            selected_columns = st.multiselect("Selecione as colunas a serem exibidas", df.columns, default=df.columns, placeholder="Quais colunas deseja exibir?", help="As colunas escolhidas aparecerão na planilha")
-            df = df[selected_columns]
-
-        # Exibição de dados
-        with st.expander(":blue[**DADOS**] CARREGADOS", icon=":material/format_list_bulleted:"):
-            edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
-
-        st.subheader("🧮:green[**GRÁFICOS**] Estatísticos", divider="rainbow")
-
-        # Configuração de eixos e legendas
-        with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False, icon=":material/checklist:"):
-            x_axis = st.selectbox(":blue[**➡️ Eixo X**]", edited_df.columns)
-            y_axis = st.selectbox(":blue[**⬆️ Eixo Y**]", edited_df.columns)
-            color_col = st.selectbox(":rainbow[**Coluna para cor**] _(opcional)_", [None] + list(edited_df.columns))
-            text_col = st.selectbox(":blue[**Texto nas Barras**] _(opcional)_", [None] + list(edited_df.columns))
-
-        # **Renomeação de eixos e legendas**
-        # **Renomeação de eixos e legendas**
-        with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Legendas", expanded=False, icon=":material/format_shapes:"):
-            x_label = st.text_input(":blue[**➡️ Eixo X**]", x_axis)
-            y_label = st.text_input(":blue[**⬆️ Eixo Y**]", y_axis)
-            legend_title = st.text_input(":blue[**Legenda**]", color_col if color_col else "Legenda")
-            
-            # Campo para título do gráfico
-            title = st.text_input(":blue[**Título do Gráfico**]", "📊 Estatísticas")
-        
-        # Criação do primeiro gráfico
-        if x_axis and y_axis:
-            # Configuração do gráfico principal
-            labels = {x_axis: x_label, y_axis: y_label}
-            if color_col:
-                labels[color_col] = legend_title
-        
-            # Criação do gráfico principal
-            fig = px.bar(
-                edited_df,
-                x=x_axis,
-                y=y_axis,
-                color=color_col,
-                text=text_col,
-                labels=labels
-            )
-            
-            # Adicionando apenas o título ao gráfico
-            fig.update_layout(
-                title=title
-            )
-        
-            st.plotly_chart(fig, use_container_width=True, key="main_graph")
-                
-                
-                
-
-
-        # Criação do gráfico TOP dinâmico
-        # Criação do gráfico TOP dinâmico
-        with st.expander("🏆 :green[**GRÁFICO TOP**] Dinâmico", expanded=False, icon=":material/format_list_bulleted:"):
-            st.markdown("### :blue[**Escolha o limite para o TOP:**]")
-        
-            # Criando duas colunas
-            col1, col2, col3, col4 = st.columns([1.5,1,1,1])
-        
-            with col1:
-                top_limit = st.slider(":orange[**Quantidade de itens no TOP:**]", min_value=1, max_value=len(df), value=200, step=1)
-        
-            with col4:
-                ascending_top = st.checkbox(":red[**Colocar em ordem crescente:**]", value=False)
-
-            with col4:
-                coluna_top = st.selectbox(":violet[**Selecione a coluna para os TOP:**]", options=df.columns, index=0)
-
-            with col4:
-                # Campo para título do gráfico TOP
-                title_top = st.text_input(":blue[**Título do Gráfico**]", "📊 Estatísticas", key="top")
-        
-            # Tratamento especial para "Horas Extras" na coluna TOP
-            if coluna_top == "Horas Extras":
-                df["Horas Extras Minutos"] = df["Horas Extras"].apply(convert_time_to_minutes)
-                top_df = df.sort_values(by="Horas Extras Minutos", ascending=ascending_top).head(top_limit)
-                top_df["Horas Extras"] = top_df["Horas Extras Minutos"].apply(minutes_to_time)
-                top_df = top_df.drop(columns=["Horas Extras Minutos"])
-            else:
-                top_df = df.sort_values(by=coluna_top, ascending=ascending_top).head(top_limit)
-        
-            # Criação do gráfico TOP
-            fig_top = px.bar(
-                top_df,
-                x=x_axis,
-                y=y_axis,
-                color=color_col,
-                text=text_col,
-                labels=labels
-            )
-            
-            # Adicionando o título ao gráfico TOP
-            fig_top.update_layout(
-                title=title_top
-            )
-        
-            # Exibindo o gráfico abaixo das colunas
-            st.plotly_chart(fig_top, use_container_width=True, key="top_graph")
-                    
-
-    except Exception as e:
-        st.error(f"Erro ao processar o arquivo: {e}")
-    
-
-
-# Upload de arquivo
-# st.logo("https://img.freepik.com/vetores-gratis/grafico-de-crescimento-dos-negocios-em-ascensao_1308-170777.jpg")
-st.logo("https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGI1NXBsY2NoOHE4Z2k0NzIwcmk2eHRhcWQxenllaWU3bzM1dHd6diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/gjrOAylhpZm3dLnO5J/giphy.gif", size="large")
-# st.sidebar.image(
-#     "https://elbibliote.com/libro-pedia/manual_matematica/wp-content/uploads/2020/07/TH-Financial-business-chart-and-graphs476769843.jpg",
-#     width=200  # Ajuste a largura da imagem conforme necessário
-# )
-
-with st.sidebar.expander(":green[**CARREGAR**] ARQUIVO", expanded=True, icon=":material/contextual_token_add:"):
-    # Adiciona a imagem centralizada usando HTML
-    st.markdown(
-        """
-        <div style="text-align: center;">
-            <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGI1NXBsY2NoOHE4Z2k0NzIwcmk2eHRhcWQxenllaWU3bzM1dHd6diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/gjrOAylhpZm3dLnO5J/giphy.gif" alt="Gráfico" style="width:300px;">
-        </div>
-        """,
-        unsafe_allow_html=True,
+    # Unindo os DataFrames com base em uma coluna em comum
+    common_col = st.sidebar.selectbox(
+        ":blue[**Coluna Comum para União**]", options=list(dataframes.values())[0].columns
     )
-    
-    # Adiciona o carregador de arquivos
-    uploaded_file = st.file_uploader("📊 :green[**Carregue um arquivo para criar um gráfico**]", type=["xlsx", "csv"])
 
-if uploaded_file:
-    exibir_grafico(uploaded_file)
+    combined_df = pd.concat(dataframes.values(), axis=0, join='outer', ignore_index=True)
+
+    # Seleção de Colunas para Exibição
+    with st.sidebar.expander(":blue[**SELECIONAR**] Colunas para Exibir", expanded=False):
+        selected_columns = st.multiselect(
+            ":red[**Exibir colunas**]",
+            combined_df.columns,
+            default=combined_df.columns,
+            placeholder="Selecione as colunas para exibir",
+            help="Selecione as colunas que deseja exibir no gráfico."
+        )
+
+    # Filtra o DataFrame com base nas colunas selecionadas
+    if selected_columns:
+        combined_df = combined_df[selected_columns]
+
+    st.subheader("🧮:green[**GRÁFICOS**] Estatísticos", divider="rainbow")
+
+    # Configuração de Gráficos
+    with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False):
+        x_axis = st.selectbox(":blue[**➡️ Eixo X**]", combined_df.columns)
+        y_axis = st.selectbox(":blue[**⬆️ Eixo Y**]", combined_df.columns)
+        color_col = st.selectbox(":rainbow[**Coluna para cor**] _(opcional)_", [None] + list(combined_df.columns))
+
+        text_cols = st.sidebar.multiselect(
+            ":blue[**Texto nas Barras**] _(opcional)_",
+            options=combined_df.columns,
+            default=None,
+            help="Selecione uma ou mais colunas para exibir como texto nas barras"
+        )
+
+    if x_axis and y_axis:
+        try:
+            combined_df["Texto Barras"] = combined_df.apply(
+                lambda row: "<br>".join(
+                    [f"<b style='color:black'>{col}:</b> <span style='color:blue'>{row[col]}</span>" for col in text_cols]
+                ), axis=1
+            )
+
+            fig = px.bar(
+                combined_df,
+                x=x_axis,
+                y=y_axis,
+                color=color_col,
+                text="Texto Barras",
+                custom_data=combined_df[selected_columns]
+            )
+
+            fig.update_traces(
+                texttemplate='%{text}',
+                textposition='inside',
+                hovertemplate=generate_hovertemplate(combined_df, selected_columns)
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+        except Exception as e:
+            st.error(f"Erro ao criar gráfico: {e}")
+
+uploaded_files = st.sidebar.file_uploader(
+    ":green[**Carregar Arquivos**]", type=["xlsx", "csv"], accept_multiple_files=True
+)
+
+if uploaded_files:
+    dataframes = process_multiple_files(uploaded_files)
+    exibir_grafico(dataframes)
 else:
-    exibir_grafico()
+    st.markdown(get_markdown())
