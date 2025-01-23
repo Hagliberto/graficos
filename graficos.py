@@ -33,7 +33,6 @@ def ordenar_coluna(df, coluna, ascending):
         df = df.sort_values(by=coluna, ascending=ascending, key=lambda col: col.str.lower())
     return df
 
-
 config_page()
 
 # Função para converter tempo em formato HH:MM para minutos
@@ -64,8 +63,6 @@ def convert_time_to_minutes(time_str):
             error_displayed = True  # Marca o erro como exibido
         return None
 
-
-
 # Função para converter minutos de volta para o formato HH:MM
 @st.cache_data
 def minutes_to_time(minutes):
@@ -86,7 +83,7 @@ def load_data(uploaded_file, skip_rows=0):
         return None
 
 # Gera o texto formatado para o tooltip dinamicamente e colorido
-def generate_hovertemplate(df, selected_columns):
+def generate_hovertemplate(selected_columns):
     hover_text = []
     for i, col in enumerate(selected_columns):
         hover_text.append(
@@ -94,9 +91,6 @@ def generate_hovertemplate(df, selected_columns):
         )
     return "".join(hover_text) + "<extra></extra>"
 
-
-
-# Função para exibir gráficos e data_editor
 # Função para exibir gráficos e data_editor
 def exibir_grafico(uploaded_file=None):
     if not uploaded_file:
@@ -149,7 +143,6 @@ def exibir_grafico(uploaded_file=None):
             df_filtered = df  # Se nenhuma coluna for selecionada, mostra todas as colunas
 
         # Configuração de Gráficos
-        # Configuração de Gráficos
         st.subheader("🧮:green[**GRÁFICOS**] Estatísticos", divider="rainbow")
         with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False, icon=":material/checklist:"):
             x_axis = st.selectbox(":blue[**➡️ Eixo X**]", df_filtered.columns)
@@ -165,7 +158,6 @@ def exibir_grafico(uploaded_file=None):
             )
 
         # Personalizar o texto exibido dentro das barras
-        # Personalizar o texto exibido dentro das barras
         if text_cols:
             def format_text(row):
                 # Formatar o texto com o nome da coluna em preto e o valor em outra cor
@@ -174,17 +166,14 @@ def exibir_grafico(uploaded_file=None):
                     for col in text_cols
                 ])
                 return formatted_text
-        
+
             # Adicionar coluna de texto formatado ao DataFrame
             df_filtered["Texto Barras"] = df_filtered.apply(format_text, axis=1)
             text_col = "Texto Barras"
         else:
-            # Caso nenhuma coluna seja selecionada, usar o eixo X
-            df_filtered["Texto Barras"] = df_filtered[x_axis]
+            # Caso nenhuma coluna seja selecionada, usar os valores dos eixos X e Y
+            df_filtered["Texto Barras"] = df_filtered.apply(lambda row: f"{row[x_axis]}: {row[y_axis]}", axis=1)
             text_col = "Texto Barras"
-        
-        
-
 
         with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Legendas", expanded=False, icon=":material/format_shapes:"):
             x_label = st.text_input(":blue[**➡️ Eixo X**]", value=x_axis, help="Insira um rótulo para o eixo X")
@@ -194,105 +183,57 @@ def exibir_grafico(uploaded_file=None):
 
         # Exibição de Dados
         with st.expander(":blue[**DADOS**] CARREGADOS", icon=":material/format_list_bulleted:"):
-            st.data_editor(df_filtered.reset_index(drop=True), use_container_width=True, num_rows="dynamic")
+            edited_df = st.data_editor(df_filtered.reset_index(drop=True), use_container_width=True, num_rows="dynamic")
+
+        # Atualizar o DataFrame com as edições
+        df_filtered = edited_df
 
         # Criação do Gráfico Principal
         if x_axis and y_axis:
             labels = {x_axis: x_label, y_axis: y_label}
             if color_col:
                 labels[color_col] = legend_title
-        
+
             try:
-                # Gera o texto formatado para exibição nas barras
-                if text_cols:
-                    def format_text(row):
-                        # Nome da coluna em preto e valor em azul, alinhados verticalmente
-                        return "<br>".join([
-                            f"<b style='color:black'>{col}:</b> <span style='color:blue'>{int(row[col]) if isinstance(row[col], float) and row[col].is_integer() else row[col]}</span>"
-                            for col in text_cols
-                        ])
-        
-                    # Adiciona a coluna com texto formatado
-                    df_filtered["Texto Barras"] = df_filtered.apply(format_text, axis=1)
-                    text_col = "Texto Barras"
-                else:
-                    text_col = None
-        
                 # Lógica para criar gráfico
                 fig = px.bar(
                     df_filtered,
                     x=x_axis,
                     y=y_axis,
                     color=color_col,
-                    text=text_col,  # Usa o texto formatado ou o eixo X
+                    text=text_col,  # Usa o texto formatado ou os valores dos eixos X e Y
                     labels=labels,
-                    custom_data=df_filtered[selected_columns]  # Passa as colunas selecionadas para o customdata
+                    custom_data=[df_filtered[col].fillna('') for col in selected_columns]  # Passa as colunas selecionadas para o customdata, preenchendo valores ausentes com uma string vazia
                 )
-                
+
                 # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
                 fig.update_traces(
-                    texttemplate='%{text}',  # Renderiza o texto formatado dentro das barras
+                    texttemplate='<b>%{text}</b>',  # Mostra o texto formatado dentro das barras
                     textposition='inside',  # Texto dentro das barras
                     insidetextanchor='middle',  # Centraliza verticalmente
                     textfont=dict(size=12),  # Define o tamanho da fonte
-                    hovertemplate=generate_hovertemplate(df_filtered, selected_columns)  # Configura o tooltip dinamicamente e colorido
+                    hovertemplate="<b>%{x}</b><br>" + "<br>".join([f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in enumerate(selected_columns)])  # Configura o tooltip dinamicamente e colorido
                 )
-                
-                
-        
+
+                # Adicionar título ao gráfico
+                fig.update_layout(title=title)
+
                 # Renderizar o gráfico
                 st.plotly_chart(fig, use_container_width=True, key="main_graph")
-        
+
             except KeyError as e:
                 st.error(f"Erro ao criar o gráfico: A coluna {e} não foi encontrada no dataframe. Verifique as colunas selecionadas.")
             except ValueError as e:
                 st.error(f"Erro de valor: {str(e)}. Verifique os dados e tente novamente.")
             except Exception as e:
                 st.error(f"Erro inesperado: {str(e)}. Tente novamente ou contate o suporte.")
-        
-        # Gráfico TOP Dinâmico
-        with st.expander("🏆 :green[**GRÁFICO TOP**] Dinâmico", expanded=False, icon=":material/format_list_bulleted:"):
-            top_limit = st.slider("Quantidade de itens no TOP:", min_value=1, max_value=len(df_filtered), value=10)
-            ascending_top = st.checkbox("Ordem crescente", value=False)
-            coluna_top = st.selectbox("Coluna para TOP", df_filtered.columns)
-
-            if coluna_top:
-                top_df = ordenar_coluna(df_filtered, coluna_top, ascending_top).head(top_limit)
-                fig_top = px.bar(
-                    top_df,
-                    x=x_axis,
-                    y=y_axis,
-                    color=color_col,
-                    text=text_col,
-                    labels=labels
-                )
-                fig_top.update_layout(title=f"Top {top_limit} - {title}")
-                st.plotly_chart(fig_top, use_container_width=True, key="top_graph")
 
     except Exception as e:
         st.error(f"Erro ao processar o arquivo: {e}")
 
-
-
-# Upload de arquivo
-# st.logo("https://img.freepik.com/vetores-gratis/grafico-de-crescimento-dos-negocios-em-ascensao_1308-170777.jpg")
-st.logo("https://static.wixstatic.com/media/d8a964_46586e54af604cfe99b47f4c3ad7b2ed~mv2.gif", size="large")
-# st.sidebar.image(
-#     "https://elbibliote.com/libro-pedia/manual_matematica/wp-content/uploads/2020/07/TH-Financial-business-chart-and-graphs476769843.jpg",
-#     width=200  # Ajuste a largura da imagem conforme necessário
-# )
+st.logo("https://static.tildacdn.net/tild6338-3232-4634-b733-666338333564/giphy.gif", size="large")
 
 with st.sidebar.expander(":green[**CARREGAR**] ARQUIVO", expanded=True, icon=":material/contextual_token_add:"):
-    # Adiciona a imagem centralizada usando HTML
-    st.markdown(
-        """
-        <div style="text-align: center;">
-            <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGI1NXBsY2NoOHE4Z2k0NzIwcmk2eHRhcWQxenllaWU3bzM1dHd6diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/gjrOAylhpZm3dLnO5J/giphy.gif" alt="Gráfico" style="width:300px;">
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    
     # Adiciona o carregador de arquivos
     uploaded_file = st.file_uploader("📊 :green[**Carregue um arquivo para criar um gráfico**]", type=["xlsx", "csv"])
 
