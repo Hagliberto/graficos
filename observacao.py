@@ -4,9 +4,20 @@ import streamlit as st
 
 
 def get_markdown():
-    st.success("## Sistema de Criação de Gráficos", icon=":material/analytics:")
-    st.subheader(" ", divider="rainbow")
-    return """
+    
+    col1, col2, col3 = st.columns([0.15,1,1])
+    
+    with col1:
+        st.image(
+            "https://static.wixstatic.com/media/d8a964_46586e54af604cfe99b47f4c3ad7b2ed~mv2.gif",
+            width=100  # Ajuste a largura da imagem conforme necessário
+        )
+
+
+    with col2:    
+        st.success("## Sistema de Criação de Gráficos", icon=":material/analytics:")
+        st.subheader(" ", divider="rainbow")
+        return """
     
     ### 🗂️ **1. Upload de Arquivo**
     - Faça o upload de um arquivo nos formatos **CSV** ou **XLSX** utilizando o botão na barra lateral.
