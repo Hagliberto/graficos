@@ -276,7 +276,7 @@ def exibir_grafico(uploaded_file=None):
 
 # Upload de arquivo
 # st.logo("https://img.freepik.com/vetores-gratis/grafico-de-crescimento-dos-negocios-em-ascensao_1308-170777.jpg")
-st.logo("https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGI1NXBsY2NoOHE4Z2k0NzIwcmk2eHRhcWQxenllaWU3bzM1dHd6diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/gjrOAylhpZm3dLnO5J/giphy.gif", size="large")
+st.logo("https://static.wixstatic.com/media/d8a964_46586e54af604cfe99b47f4c3ad7b2ed~mv2.gif", size="large")
 # st.sidebar.image(
 #     "https://elbibliote.com/libro-pedia/manual_matematica/wp-content/uploads/2020/07/TH-Financial-business-chart-and-graphs476769843.jpg",
 #     width=200  # Ajuste a largura da imagem conforme necessário
