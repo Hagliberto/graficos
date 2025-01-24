@@ -75,24 +75,6 @@ def minutes_to_time(minutes):
     mins = minutes % 60
     return f"{hours}:{mins:02}"
 
-# # Função para carregar os dados do arquivo
-# @st.cache_data
-# def load_data(uploaded_file, skip_rows=0):
-#     if uploaded_file.name.endswith(".csv"):
-#         df = pd.read_csv(uploaded_file, skiprows=skip_rows)
-#     elif uploaded_file.name.endswith(".xlsx"):
-#         df = pd.read_excel(uploaded_file, skiprows=skip_rows)
-#     else:
-#         return None
-# 
-#     # Conversão automática de colunas com valores numéricos para float/int
-#     for col in df.columns:
-#         # Tenta converter cada coluna para numérica
-#         df[col] = pd.to_numeric(df[col], errors='ignore')  # 'ignore' mantém strings como estão
-# 
- #    return df
-
-
 # Função para carregar os dados do arquivo
 @st.cache_data
 def load_data(uploaded_file, skip_rows=0):
@@ -105,13 +87,31 @@ def load_data(uploaded_file, skip_rows=0):
 
     # Conversão automática de colunas com valores numéricos para float/int
     for col in df.columns:
-        try:
-            df[col] = pd.to_numeric(df[col])  # Tenta converter a coluna para numérico
-        except ValueError:
-            # Se a conversão falhar, mantém a coluna como está
-            st.warning(f"Não foi possível converter a coluna '{col}' para numérico.")
+        # Tenta converter cada coluna para numérica
+        df[col] = pd.to_numeric(df[col], errors='ignore')  # 'ignore' mantém strings como estão
 
     return df
+
+
+# # Função para carregar os dados do arquivo
+# @st.cache_data
+# def load_data(uploaded_file, skip_rows=0):
+#     if uploaded_file.name.endswith(".csv"):
+#         df = pd.read_csv(uploaded_file, skiprows=skip_rows)
+#     elif uploaded_file.name.endswith(".xlsx"):
+#         df = pd.read_excel(uploaded_file, skiprows=skip_rows)
+#     else:
+#         return None
+
+#     # Conversão automática de colunas com valores numéricos para float/int
+#     for col in df.columns:
+#         try:
+#             df[col] = pd.to_numeric(df[col])  # Tenta converter a coluna para numérico
+#         except ValueError:
+#             # Se a conversão falhar, mantém a coluna como está
+#             st.warning(f"Não foi possível converter a coluna '{col}' para numérico.")
+
+#     return df
 
 # Gera o texto formatado para o tooltip dinamicamente e colorido
 def generate_hovertemplate(selected_columns):
