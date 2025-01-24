@@ -5,7 +5,7 @@ import streamlit as st
 
 def get_markdown():
     
-    col1, col2, col3 = st.columns([0.15,1,1])
+    col1, col2, col3 = st.sidebar.columns([0.15,1,1])
     
     with col1:
         st.image(
