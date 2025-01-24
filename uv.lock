@@ -1,0 +1,227 @@
+[[package]]
+name = "altair"
+version = "5.5.0"
+description = "Declarative statistical visualization library"
+python-versions = ">=3.7"
+
+[[package]]
+name = "plotly"
+version = "5.24.1"
+description = "Interactive graphing library"
+python-versions = ">=3.6"
+
+[[package]]
+name = "pydeck"
+version = "0.9.1"
+description = "WebGL-powered library for 3D visualizations"
+python-versions = ">=3.6"
+
+[[package]]
+name = "pandas"
+version = "2.2.3"
+description = "Data manipulation and analysis library"
+python-versions = ">=3.7"
+
+[[package]]
+name = "numpy"
+version = "2.2.1"
+description = "Library for numerical computations"
+python-versions = ">=3.7"
+
+[[package]]
+name = "openpyxl"
+version = "3.1.5"
+description = "Read/write Excel 2010 xlsx/xlsm/xltx/xltm files"
+python-versions = ">=3.6"
+
+[[package]]
+name = "et_xmlfile"
+version = "2.0.0"
+description = "Efficient XML processing"
+python-versions = ">=3.6"
+
+[[package]]
+name = "jsonschema"
+version = "4.23.0"
+description = "An implementation of JSON Schema"
+python-versions = ">=3.6"
+
+[[package]]
+name = "jsonschema-specifications"
+version = "2024.10.1"
+description = "JSON Schema specifications"
+python-versions = ">=3.6"
+
+[[package]]
+name = "requests"
+version = "2.32.3"
+description = "HTTP library for Python"
+python-versions = ">=3.6"
+
+[[package]]
+name = "tornado"
+version = "6.4.2"
+description = "Web framework and asynchronous networking library"
+python-versions = ">=3.6"
+
+[[package]]
+name = "watchdog"
+version = "6.0.0"
+description = "File system monitoring"
+python-versions = ">=3.6"
+
+[[package]]
+name = "Jinja2"
+version = "3.1.5"
+description = "A modern and designer-friendly templating language for Python"
+python-versions = ">=3.6"
+
+[[package]]
+name = "MarkupSafe"
+version = "3.0.2"
+description = "A string handling library for HTML/XML"
+python-versions = ">=3.6"
+
+[[package]]
+name = "GitPython"
+version = "3.1.44"
+description = "Python Git Library"
+python-versions = ">=3.6"
+
+[[package]]
+name = "blinker"
+version = "1.9.0"
+description = "A fast dispatching system"
+python-versions = ">=3.6"
+
+[[package]]
+name = "tenacity"
+version = "9.0.0"
+description = "Retrying library for Python"
+python-versions = ">=3.6"
+
+[[package]]
+name = "attrs"
+version = "24.3.0"
+description = "Classes Without Boilerplate"
+python-versions = ">=3.6"
+
+[[package]]
+name = "packaging"
+version = "24.2"
+description = "Core utilities for Python packages"
+python-versions = ">=3.6"
+
+[[package]]
+name = "toml"
+version = "0.10.2"
+description = "Tom's Obvious, Minimal Language"
+python-versions = ">=3.6"
+
+[[package]]
+name = "typing_extensions"
+version = "4.12.2"
+description = "Backports of the standard library typing module"
+python-versions = ">=3.6"
+
+[[package]]
+name = "rich"
+version = "13.9.4"
+description = "Rich text and beautiful formatting in the terminal"
+python-versions = ">=3.7"
+
+[[package]]
+name = "Pygments"
+version = "2.19.1"
+description = "Syntax highlighting package"
+python-versions = ">=3.6"
+
+[[package]]
+name = "pillow"
+version = "11.1.0"
+description = "Python Imaging Library"
+python-versions = ">=3.6"
+
+[[package]]
+name = "charset-normalizer"
+version = "3.4.1"
+description = "The Charset-Normalizer is a library that helps in normalizing character encodings"
+python-versions = ">=3.6"
+
+[[package]]
+name = "idna"
+version = "3.10"
+description = "Internationalized Domain Names in Applications (IDNA)"
+python-versions = ">=3.6"
+
+[[package]]
+name = "protobuf"
+version = "5.29.3"
+description = "Protocol Buffers are a language-neutral, platform-neutral extensible mechanism for serializing structured data"
+python-versions = ">=3.6"
+
+[[package]]
+name = "pyarrow"
+version = "19.0.0"
+description = "Apache Arrow is a cross-language development platform for in-memory data"
+python-versions = ">=3.6"
+
+[[package]]
+name = "narwhals"
+version = "1.22.0"
+description = "Utilities for data manipulation"
+python-versions = ">=3.6"
+
+[[package]]
+name = "referencing"
+version = "0.35.1"
+description = "Manage references in documents"
+python-versions = ">=3.6"
+
+[[package]]
+name = "python-dateutil"
+version = "2.9.0.post0"
+description = "Extensions to the standard Python datetime"
+python-versions = ">=3.6"
+
+[[package]]
+name = "pytz"
+version = "2024.2"
+description = "World timezone definitions, modern and historical"
+python-versions = ">=3.6"
+
+[[package]]
+name = "tzdata"
+version = "2024.2"
+description = "Time zone database"
+python-versions = ">=3.6"
+
+[[package]]
+name = "click"
+version = "8.1.8"
+description = "A package for creating command-line interfaces"
+python-versions = ">=3.6"
+
+[[package]]
+name = "smmap"
+version = "5.0.2"
+description = "Memory management for Git"
+python-versions = ">=3.6"
+
+[[package]]
+name = "rpds-py"
+version = "0.22.3"
+description = "Persistent data structures in Python"
+python-versions = ">=3.6"
+
+[[package]]
+name = "markdown-it-py"
+version = "3.0.0"
+description = "Markdown parser"
+python-versions = ">=3.6"
+
+[[package]]
+name = "mdurl"
+version = "0.1.2"
+description = "Markdown URL utility"
+python-versions = ">=3.6"
