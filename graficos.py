@@ -125,7 +125,7 @@ def generate_ticks(df, column):
 col1, col2 = st.sidebar.columns([0.2, 1])
 
 with col1:
-    st.subheader("![GIF](https://i.giphy.com/gjrOAylhpZm3dLnO5J.webp)", divider="rainbow")
+    st.subheader("![GIF](https://static.wixstatic.com/media/d8a964_46586e54af604cfe99b47f4c3ad7b2ed~mv2.gif)", divider="rainbow")
 
 with col2:
     st.subheader("📈:green[**DADOS**] Estatísticos", divider="rainbow")
