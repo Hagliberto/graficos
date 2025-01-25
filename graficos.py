@@ -136,7 +136,28 @@ with st.sidebar.expander(":green[**CARREGAR**] ARQUIVO", expanded=st.session_sta
     if uploaded_file:
         st.session_state["expand_file_uploader"] = False  # Fecha o expander após upload
 
+# Função para exibir gráfico
+def exibir_grafico(uploaded_file):
+    try:
+        skip_rows = st.sidebar.number_input("Linhas a descartar", min_value=0, value=0, step=1)
+        df = load_data(uploaded_file, skip_rows)
+
+        if df is None:
+            st.error("Erro ao carregar o arquivo.")
+            return
+
+        # Configurações adicionais
+        x_axis = st.sidebar.selectbox("Eixo X", df.columns)
+        y_axis = st.sidebar.selectbox("Eixo Y", df.columns)
+
+        # Gerar gráfico
+        fig = px.bar(df, x=x_axis, y=y_axis)
+        st.plotly_chart(fig)
+
+    except Exception as e:
+        st.error(f"Erro ao processar o arquivo: {e}")
+
 if uploaded_file:
     exibir_grafico(uploaded_file)
 else:
-    exibir_grafico()
+    st.write("Nenhum arquivo carregado.")
