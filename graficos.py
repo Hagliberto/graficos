@@ -93,26 +93,6 @@ def load_data(uploaded_file, skip_rows=0):
     return df
 
 
-# # Função para carregar os dados do arquivo
-# @st.cache_data
-# def load_data(uploaded_file, skip_rows=0):
-#     if uploaded_file.name.endswith(".csv"):
-#         df = pd.read_csv(uploaded_file, skiprows=skip_rows)
-#     elif uploaded_file.name.endswith(".xlsx"):
-#         df = pd.read_excel(uploaded_file, skiprows=skip_rows)
-#     else:
-#         return None
-
-#     # Conversão automática de colunas com valores numéricos para float/int
-#     for col in df.columns:
-#         try:
-#             df[col] = pd.to_numeric(df[col])  # Tenta converter a coluna para numérico
-#         except ValueError:
-#             # Se a conversão falhar, mantém a coluna como está
-#             st.warning(f"Não foi possível converter a coluna '{col}' para numérico.")
-
-#     return df
-
 # Gera o texto formatado para o tooltip dinamicamente e colorido
 def generate_hovertemplate(selected_columns):
     hover_text = []
@@ -145,7 +125,7 @@ def generate_ticks(df, column):
 col1, col2 = st.sidebar.columns([0.2, 1])
 
 with col1:
-    st.subheader("![GIF](https://static.wixstatic.com/media/d8a964_46586e54af604cfe99b47f4c3ad7b2ed~mv2.gif)", divider="rainbow")
+    st.subheader("![GIF](https://i.giphy.com/gjrOAylhpZm3dLnO5J.webp)", divider="rainbow")
 
 with col2:
     st.subheader("📈:green[**DADOS**] Estatísticos", divider="rainbow")
@@ -252,26 +232,26 @@ def exibir_grafico(uploaded_file=None):
             labels = {x_axis: x_axis, y_axis: y_axis}
             if color_col:
                 labels[color_col] = color_col
-
+        
             fig = px.bar(
                 df_filtered,
                 x=x_axis,
                 y=y_axis,
                 color=color_col,
-                text=text_col if "text_col" in locals() else None,
+                text=text_col if text_col and not df_filtered["Texto Barras"].isnull().all() else None,  # Verifica se 'text_col' tem valores
                 labels=labels,
                 custom_data=[df_filtered[col].fillna('') for col in selected_columns]
             )
-
+        
             # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
             fig.update_traces(
-                texttemplate='<b>%{text}</b>' if "text_col" in locals() else None,
+                texttemplate='<b>%{text}</b>' if text_col and not df_filtered["Texto Barras"].isnull().all() else None,
                 textposition='inside',
                 hovertemplate="<b>%{x}</b><br>" + "<br>".join(
                     [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in
-                     enumerate(selected_columns)])
+                     enumerate(selected_columns)]),
             )
-
+        
             # Adicionar título e ticks personalizados ao gráfico
             fig.update_layout(
                 title="📊 Estatísticas",
@@ -283,6 +263,7 @@ def exibir_grafico(uploaded_file=None):
                     title="Horas Extras"
                 )
             )
+        
 
 
         # Seleção de colunas para texto nas barras
@@ -290,11 +271,12 @@ def exibir_grafico(uploaded_file=None):
             text_cols = st.multiselect(
                 ":blue[**Colunas para texto nas barras**]",
                 options=df_filtered.columns,
-                placeholder="📊 Texto nas barras",
+                placeholder="Colunas para exibir como texto nas barras",
                 default=[],  # Nenhuma coluna selecionada por padrão
                 help="Selecione as colunas que deseja exibir como texto dentro das barras"
             )
-        
+
+
         # Criar o texto para as barras
         if text_cols:
             # Concatenar valores das colunas selecionadas em uma nova coluna "Texto Barras"
@@ -303,9 +285,9 @@ def exibir_grafico(uploaded_file=None):
             )
             text_col = "Texto Barras"
         else:
-            # Não criar texto nas barras quando nenhuma coluna for selecionada
-            df_filtered["Texto Barras"] = ""
-            text_col = None
+            # Caso nenhuma coluna seja selecionada, usar os valores do eixo X como padrão
+            df_filtered["Texto Barras"] = df_filtered[x_axis].astype(str)
+            text_col = "Texto Barras"
 
         # Expander para renomear os eixos e título do gráfico
         with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Título do Gráfico", expanded=False, icon=":material/insert_text:"):
