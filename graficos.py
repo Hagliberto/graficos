@@ -192,7 +192,46 @@ def exibir_grafico(uploaded_file=None):
                 num_rows="dynamic"  # Permite o ajuste dinâmico do número de linhas
             )
 
-        # Seleção de colunas para texto nas barras
+
+
+        # Expander para Gráfico de Rosca/Pizza
+        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/chart-pie:"):
+            try:
+                if uploaded_file:
+                    # Recarregar o DataFrame caso necessário
+                    df = load_data(uploaded_file)
+                    
+                    # Seleção de coluna para os valores do gráfico
+                    col_values = st.selectbox(":blue[**Coluna de Valores**] para o gráfico", df.columns, help="Selecione a coluna com os valores a serem exibidos no gráfico de pizza.")
+                    
+                    # Seleção de coluna para os rótulos do gráfico
+                    col_labels = st.selectbox(":blue[**Coluna de Rótulos**] para o gráfico", df.columns, help="Selecione a coluna com os rótulos a serem exibidos no gráfico de pizza.")
+                    
+                    # Verificar se as colunas selecionadas são válidas
+                    if pd.api.types.is_numeric_dtype(df[col_values]) and col_labels:
+                        # Criar o gráfico de pizza
+                        fig_pizza = px.pie(
+                            df,
+                            names=col_labels,
+                            values=col_values,
+                            hole=0.4,  # Define como gráfico de rosca
+                            title="📊 Gráfico de Rosca/Pizza",
+                            labels={col_labels: "Rótulos", col_values: "Valores"}
+                        )
+                        
+                        # Exibir o gráfico
+                        st.plotly_chart(fig_pizza, use_container_width=True, key="pie_chart")
+                    else:
+                        st.warning("⚠️ Certifique-se de selecionar uma coluna numérica para os valores e outra para os rótulos.")
+                else:
+                    st.info("📂 Carregue um arquivo para visualizar o gráfico de rosca/pizza.")
+            except Exception as e:
+                st.error(f"Erro ao gerar o gráfico de rosca/pizza: {e}")
+        
+
+
+
+
         # Seleção de colunas para texto nas barras
         with st.sidebar.expander(":blue[**TEXTO NAS BARRAS**] _(opcional)_", expanded=False, icon=":material/format_shapes:"):
             text_cols = st.multiselect(
