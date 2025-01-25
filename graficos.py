@@ -92,6 +92,27 @@ def load_data(uploaded_file, skip_rows=0):
 
     return df
 
+
+# # Função para carregar os dados do arquivo
+# @st.cache_data
+# def load_data(uploaded_file, skip_rows=0):
+#     if uploaded_file.name.endswith(".csv"):
+#         df = pd.read_csv(uploaded_file, skiprows=skip_rows)
+#     elif uploaded_file.name.endswith(".xlsx"):
+#         df = pd.read_excel(uploaded_file, skiprows=skip_rows)
+#     else:
+#         return None
+
+#     # Conversão automática de colunas com valores numéricos para float/int
+#     for col in df.columns:
+#         try:
+#             df[col] = pd.to_numeric(df[col])  # Tenta converter a coluna para numérico
+#         except ValueError:
+#             # Se a conversão falhar, mantém a coluna como está
+#             st.warning(f"Não foi possível converter a coluna '{col}' para numérico.")
+
+#     return df
+
 # Gera o texto formatado para o tooltip dinamicamente e colorido
 def generate_hovertemplate(selected_columns):
     hover_text = []
@@ -229,45 +250,54 @@ def exibir_grafico(uploaded_file=None):
             # Tratamento caso o usuário não tenha selecionado nenhuma coluna
             if color_col == "Selecione":
                 color_col = None  # Define como None para compatibilidade com o restante do código
+            
+
+
+
+        # # Converter a coluna "Horas Extras" para minutos
+        # if "Horas Extras" in df_filtered.columns:
+        #     df_filtered["Horas Extras Minutos"] = df_filtered["Horas Extras"].apply(convert_time_to_minutes)
+        #     y_axis = "Horas Extras Minutos"  # Usa a nova coluna para lógica do gráfico
+
 
         # Converter a coluna "Horas Extras" para minutos apenas se ela for escolhida como eixo Y
         if y_axis == "Horas Extras" and "Horas Extras" in df_filtered.columns:
             df_filtered["Horas Extras Minutos"] = df_filtered["Horas Extras"].apply(convert_time_to_minutes)
             y_axis = "Horas Extras Minutos"  # Usa a nova coluna para lógica do gráfico
+        
+
+
+
 
 
         # Gerar os ticks para o eixo Y
         tick_vals, tick_texts = generate_ticks(df_filtered, y_axis)
 
         # Criação do Gráfico Principal
-        # Criação do Gráfico Principal
         if x_axis and y_axis:
             labels = {x_axis: x_axis, y_axis: y_axis}
             if color_col:
                 labels[color_col] = color_col
-        
-            # Define o valor de `text_col` ou usa None se o texto for vazio
-            text_column = text_col if text_col and not df_filtered["Texto Barras"].isnull().all() else None
-        
+
             fig = px.bar(
                 df_filtered,
                 x=x_axis,
                 y=y_axis,
                 color=color_col,
-                text=text_column,  # Usa a coluna de texto configurada ou None
+                text=text_col if "text_col" in locals() else None,
                 labels=labels,
                 custom_data=[df_filtered[col].fillna('') for col in selected_columns]
             )
-        
+
             # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
             fig.update_traces(
-                texttemplate='<b>%{text}</b>' if text_column else None,  # Aplica template somente se houver texto
+                texttemplate='<b>%{text}</b>' if "text_col" in locals() else None,
                 textposition='inside',
                 hovertemplate="<b>%{x}</b><br>" + "<br>".join(
-                    [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in enumerate(selected_columns)]
-                )
+                    [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in
+                     enumerate(selected_columns)])
             )
-        
+
             # Adicionar título e ticks personalizados ao gráfico
             fig.update_layout(
                 title="📊 Estatísticas",
@@ -279,10 +309,7 @@ def exibir_grafico(uploaded_file=None):
                     title="Horas Extras"
                 )
             )
-        
-            # Renderizar o gráfico
-            st.plotly_chart(fig, use_container_width=True)
-        
+
         # Expander para renomear os eixos e título do gráfico
         with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Título do Gráfico", expanded=False, icon=":material/insert_text:"):
             x_label = st.text_input(":blue[**➡️ Eixo X**]", value=x_axis, help="Insira um rótulo para o eixo X")
@@ -331,8 +358,8 @@ def exibir_grafico(uploaded_file=None):
                 )
             )
 
-            # Renderizar o gráfico
-            st.plotly_chart(fig, use_container_width=True, key="main_graph")
+            # # Renderizar o gráfico
+            # st.plotly_chart(fig, use_container_width=True, key="main_graph")
 
 
     except Exception as e:
