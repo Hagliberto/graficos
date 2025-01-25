@@ -102,23 +102,123 @@ def generate_hovertemplate(selected_columns):
         )
     return "".join(hover_text) + "<extra></extra>"
 
-# Função para exibir gráficos e data_editor
-# Função para gerar ticks para o eixo Y (tempo em minutos ou outros formatos)
-def generate_ticks(df, column):
-    if column == "Horas Extras Minutos":
-        max_val = int(df[column].max())  # Garante que max_val seja inteiro
-        tick_step = max(30, max_val // 10)  # Exibir ticks a cada 30 minutos ou 10 divisões
-        tick_vals = list(range(0, max_val + tick_step, tick_step))  # Intervalo dos ticks
-        tick_texts = [minutes_to_time(val) for val in tick_vals]  # Converter minutos de volta para HH:MM
-        return tick_vals, tick_texts
-    elif pd.api.types.is_numeric_dtype(df[column]):
-        max_val = int(df[column].max())  # Garante que max_val seja inteiro
-        tick_step = max(1, max_val // 10)  # Dividir em 10 intervalos
-        tick_vals = list(range(0, max_val + tick_step, tick_step))
-        return tick_vals, tick_vals  # Para numéricos, os ticks são os próprios valores
-    else:
-        unique_vals = df[column].unique()
-        return unique_vals, unique_vals
+# # Função para exibir gráficos e data_editor
+# # Função para gerar ticks para o eixo Y (tempo em minutos ou outros formatos)
+# def generate_ticks(df, column):
+#     if column == "Horas Extras Minutos":
+#         max_val = int(df[column].max())  # Garante que max_val seja inteiro
+#         tick_step = max(30, max_val // 10)  # Exibir ticks a cada 30 minutos ou 10 divisões
+#         tick_vals = list(range(0, max_val + tick_step, tick_step))  # Intervalo dos ticks
+#         tick_texts = [minutes_to_time(val) for val in tick_vals]  # Converter minutos de volta para HH:MM
+#         return tick_vals, tick_texts
+#     elif pd.api.types.is_numeric_dtype(df[column]):
+#         max_val = int(df[column].max())  # Garante que max_val seja inteiro
+#         tick_step = max(1, max_val // 10)  # Dividir em 10 intervalos
+#         tick_vals = list(range(0, max_val + tick_step, tick_step))
+#         return tick_vals, tick_vals  # Para numéricos, os ticks são os próprios valores
+#     else:
+#         unique_vals = df[column].unique()
+#         return unique_vals, unique_vals
+
+
+
+
+
+
+
+
+
+
+import numpy as np
+
+# Função para gerar ticks para o eixo Y (tempo em minutos, valores numéricos ou categorias)
+def generate_ticks(df, column, divisions=10, min_step=5, reverse=False):
+    """
+    Gera os valores e rótulos (ticks) para o eixo Y de um gráfico, adaptando-se ao tipo de dado.
+    
+    Parâmetros:
+    - df (DataFrame): O DataFrame contendo os dados.
+    - column (str): Nome da coluna para a qual os ticks serão gerados.
+    - divisions (int): Número máximo de divisões desejadas no eixo. Padrão é 10.
+    - min_step (int): Valor mínimo para o intervalo entre os ticks. Padrão é 5.
+    - reverse (bool): Define se os ticks devem ser exibidos em ordem decrescente. Padrão é False.
+    
+    Retorno:
+    - tick_vals (list): Lista de valores para os ticks.
+    - tick_texts (list): Lista de rótulos para os ticks (formato adaptado, ex.: HH:MM).
+    """
+    try:
+        # Verificação se a coluna existe no DataFrame
+        if column not in df.columns:
+            raise ValueError(f"A coluna '{column}' não foi encontrada no DataFrame.")
+
+        # Caso seja a coluna de "Horas Extras Minutos" (tempo em minutos)
+        if column == "Horas Extras Minutos":
+            max_val = int(df[column].max())  # Valor máximo convertido para inteiro
+            tick_step = max(30, max_val // divisions)  # Intervalo mínimo de 30 minutos
+            tick_vals = list(range(0, max_val + tick_step, tick_step))  # Criação dos valores
+            tick_texts = [minutes_to_time(val) for val in tick_vals]  # Conversão para HH:MM
+
+        # Caso a coluna seja numérica (inteiros ou decimais)
+        elif pd.api.types.is_numeric_dtype(df[column]):
+            max_val = df[column].max()
+            min_val = df[column].min()
+            tick_vals = list(np.linspace(min_val, max_val, divisions))  # Divisão uniforme dos valores
+            tick_vals = [round(x, 2) for x in tick_vals]  # Arredondamento para 2 casas decimais
+            tick_texts = tick_vals  # Para numéricos, os rótulos são os próprios valores
+
+        # Caso a coluna seja categórica ou outro tipo
+        else:
+            unique_vals = df[column].unique()
+            tick_vals = list(range(len(unique_vals)))  # Índices para as categorias
+            tick_texts = unique_vals  # Os rótulos são os valores únicos
+
+        # Reversão dos ticks, se necessário
+        if reverse:
+            tick_vals.reverse()
+            tick_texts.reverse()
+
+        return tick_vals, tick_texts  # Retorna os valores e rótulos dos ticks
+
+    except Exception as e:
+        # Tratamento de erros e retorno de valores padrão
+        print(f"Erro ao gerar ticks: {e}")
+        return [], []
+
+# Função auxiliar para converter minutos no formato HH:MM
+def minutes_to_time(minutes):
+    """
+    Converte minutos inteiros para o formato HH:MM.
+    
+    Parâmetros:
+    - minutes (int): Valor em minutos.
+    
+    Retorno:
+    - str: Representação no formato HH:MM.
+    """
+    if minutes is None:
+        return "00:00"  # Retorna um valor padrão para entradas inválidas
+    hours = minutes // 60
+    mins = minutes % 60
+    return f"{hours}:{mins:02}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Criação das colunas
