@@ -244,7 +244,7 @@ def exibir_grafico(uploaded_file=None):
         # Criação do Gráfico Principal
         # Criação do Gráfico Principal
         # Expander para Gráfico de Rosca/Pizza
-        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/chart-pie:"):
+        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/finance:"):
         
 
 
