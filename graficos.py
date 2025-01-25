@@ -3,6 +3,7 @@ import plotly.express as px
 import streamlit as st
 from observacao import get_markdown  # Importa o Markdown
 from config_page import config_page
+import numpy as np
 
 # Configuração da página deve ser o primeiro comando
 st.set_page_config(
@@ -102,35 +103,7 @@ def generate_hovertemplate(selected_columns):
         )
     return "".join(hover_text) + "<extra></extra>"
 
-# # Função para exibir gráficos e data_editor
-# # Função para gerar ticks para o eixo Y (tempo em minutos ou outros formatos)
-# def generate_ticks(df, column):
-#     if column == "Horas Extras Minutos":
-#         max_val = int(df[column].max())  # Garante que max_val seja inteiro
-#         tick_step = max(30, max_val // 10)  # Exibir ticks a cada 30 minutos ou 10 divisões
-#         tick_vals = list(range(0, max_val + tick_step, tick_step))  # Intervalo dos ticks
-#         tick_texts = [minutes_to_time(val) for val in tick_vals]  # Converter minutos de volta para HH:MM
-#         return tick_vals, tick_texts
-#     elif pd.api.types.is_numeric_dtype(df[column]):
-#         max_val = int(df[column].max())  # Garante que max_val seja inteiro
-#         tick_step = max(1, max_val // 10)  # Dividir em 10 intervalos
-#         tick_vals = list(range(0, max_val + tick_step, tick_step))
-#         return tick_vals, tick_vals  # Para numéricos, os ticks são os próprios valores
-#     else:
-#         unique_vals = df[column].unique()
-#         return unique_vals, unique_vals
-
-
-
-
-
-
-
-
-
-
-import numpy as np
-
+# Função para ordenar colunas de acordo com o tipo de dado
 # Função para gerar ticks para o eixo Y (tempo em minutos, valores numéricos ou categorias)
 def generate_ticks(df, column, divisions=10, min_step=5, reverse=False):
     """
