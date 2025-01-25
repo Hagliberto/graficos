@@ -358,8 +358,8 @@ def exibir_grafico(uploaded_file=None):
                 )
             )
 
-            # # Renderizar o gráfico
-            # st.plotly_chart(fig, use_container_width=True, key="main_graph")
+            # Renderizar o gráfico
+            st.plotly_chart(fig, use_container_width=True, key="main_graph")
 
 
     except Exception as e:
