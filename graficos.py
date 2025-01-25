@@ -182,7 +182,7 @@ with col1:
     st.subheader("![GIF](https://static.wixstatic.com/media/d8a964_46586e54af604cfe99b47f4c3ad7b2ed~mv2.gif)", divider="rainbow")
 
 with col2:
-    st.subheader("📈:green[**DADOS e GRÁFICOS**] Estatísticos", divider="rainbow")
+    st.subheader("📈:rainbow[**DADOS e GRÁFICOS**] Estatísticos", divider="rainbow")
        
 def exibir_grafico(uploaded_file=None):
     # Inicializa text_col com None
