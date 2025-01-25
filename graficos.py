@@ -217,17 +217,32 @@ def exibir_grafico(uploaded_file=None):
                         # Verifica se a coluna de valores está em formato de tempo
                         if col_values == "Horas Extras" and "Horas Extras" in df_filtered.columns:
                             df_filtered["Horas Extras Minutos"] = df_filtered["Horas Extras"].apply(convert_time_to_minutes)
-                            col_values = "Horas Extras Minutos"  # Usa os minutos para o gráfico
+                            df_filtered["Horas Extras Formatadas"] = df_filtered["Horas Extras Minutos"].apply(minutes_to_time)
+                            col_values_minutos = "Horas Extras Minutos"  # Para os cálculos internos
+                            col_values_hhmm = "Horas Extras Formatadas"  # Para exibição no gráfico
+                        else:
+                            col_values_minutos = col_values
+                            col_values_hhmm = None  # Nenhuma formatação extra
         
                         # Gera o gráfico de pizza/rosca
                         if col_values and col_labels:
                             fig_pizza = px.pie(
                                 df_filtered,
-                                values=col_values,
+                                values=col_values_minutos,  # Usa os minutos para os cálculos
                                 names=col_labels,
                                 title="📊 Gráfico de Pizza/Rosca",
-                                hole=0.4  # Ajusta o buraco para fazer o gráfico de rosca
+                                hole=0.4,  # Ajusta o buraco para fazer o gráfico de rosca
                             )
+        
+                            # Atualiza os rótulos para exibir no formato HH:MM
+                            if col_values_hhmm:
+                                fig_pizza.update_traces(
+                                    textinfo="label+percent+value",
+                                    texttemplate="%{label}<br>%{percent}<br>%{customdata}",
+                                    customdata=df_filtered[col_values_hhmm]  # Exibe valores formatados
+                                )
+        
+                            # Renderiza o gráfico
                             st.plotly_chart(fig_pizza, use_container_width=True)
                     else:
                         st.error("O DataFrame ajustado não foi encontrado. Verifique o processamento do arquivo.")
