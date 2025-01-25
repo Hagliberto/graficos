@@ -195,38 +195,42 @@ def exibir_grafico(uploaded_file=None):
 
 
         # Expander para Gráfico de Rosca/Pizza
-        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/donut_small:"):
+        # Expander para Gráfico de Rosca/Pizza
+        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/chart-pie:"):
             try:
                 if uploaded_file:
-                    # Recarregar o DataFrame caso necessário
-                    df = load_data(uploaded_file)
-                    
-                    # Seleção de coluna para os valores do gráfico
-                    col_values = st.selectbox(":blue[**Coluna de Valores**] para o gráfico", df.columns, help="Selecione a coluna com os valores a serem exibidos no gráfico de pizza.")
-                    
-                    # Seleção de coluna para os rótulos do gráfico
-                    col_labels = st.selectbox(":blue[**Coluna de Rótulos**] para o gráfico", df.columns, help="Selecione a coluna com os rótulos a serem exibidos no gráfico de pizza.")
-                    
-                    # Verificar se as colunas selecionadas são válidas
-                    if pd.api.types.is_numeric_dtype(df[col_values]) and col_labels:
-                        # Criar o gráfico de pizza
-                        fig_pizza = px.pie(
-                            df,
-                            names=col_labels,
-                            values=col_values,
-                            hole=0.4,  # Define como gráfico de rosca
-                            title="📊 Gráfico de Rosca/Pizza",
-                            labels={col_labels: "Rótulos", col_values: "Valores"}
+                    # Usa o DataFrame ajustado (df_filtered)
+                    # Verifica se as colunas estão definidas
+                    if 'df_filtered' in locals():
+                        # Selecionar a coluna de valores
+                        col_values = st.selectbox(
+                            ":blue[**Coluna de Valores**] para o gráfico de pizza",
+                            df_filtered.columns,
+                            help="Selecione a coluna com os valores a serem exibidos no gráfico de pizza."
                         )
-                        
-                        # Exibir o gráfico
-                        st.plotly_chart(fig_pizza, use_container_width=True, key="pie_chart")
+                        # Selecionar a coluna de rótulos
+                        col_labels = st.selectbox(
+                            ":blue[**Coluna de Rótulos**] para o gráfico de pizza",
+                            df_filtered.columns,
+                            help="Selecione a coluna que representará os rótulos do gráfico de pizza."
+                        )
+        
+                        # Gera o gráfico de pizza/rosca
+                        if col_values and col_labels:
+                            fig_pizza = px.pie(
+                                df_filtered,
+                                values=col_values,
+                                names=col_labels,
+                                title="📊 Gráfico de Pizza/Rosca",
+                                hole=0.4  # Ajusta o buraco para fazer o gráfico de rosca
+                            )
+                            st.plotly_chart(fig_pizza, use_container_width=True)
                     else:
-                        st.warning("⚠️ Certifique-se de selecionar uma coluna numérica para os valores e outra para os rótulos.")
+                        st.error("O DataFrame ajustado não foi encontrado. Verifique o processamento do arquivo.")
                 else:
-                    st.info("📂 Carregue um arquivo para visualizar o gráfico de rosca/pizza.")
+                    st.warning("Nenhum arquivo carregado. Por favor, carregue um arquivo para gerar o gráfico.")
             except Exception as e:
-                st.error(f"Erro ao gerar o gráfico de rosca/pizza: {e}")
+                st.error(f"Erro ao gerar o gráfico de pizza/rosca: {e}")
         
 
 
