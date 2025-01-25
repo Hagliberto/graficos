@@ -175,25 +175,6 @@ def minutes_to_time(minutes):
     mins = minutes % 60
     return f"{hours}:{mins:02}"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Criação das colunas
 col1, col2 = st.sidebar.columns([0.2, 1])
 
@@ -201,8 +182,7 @@ with col1:
     st.subheader("![GIF](https://static.wixstatic.com/media/d8a964_46586e54af604cfe99b47f4c3ad7b2ed~mv2.gif)", divider="rainbow")
 
 with col2:
-    st.subheader("📈:green[**DADOS**] Estatísticos", divider="rainbow")
-    st.subheader("📉:green[**GRÁFICOS**] Estatísticos", divider="rainbow")
+    st.subheader("📈:green[**DADOS e GRÁFICOS**] Estatísticos", divider="rainbow")
        
 def exibir_grafico(uploaded_file=None):
     # Inicializa text_col com None
