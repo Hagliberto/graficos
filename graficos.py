@@ -13,6 +13,10 @@ st.set_page_config(
     menu_items={"About": "Página inicial: 🌍 https://nucleo.streamlit.app/"}
 )
 
+if "expand_file_uploader" not in st.session_state:
+    st.session_state["expand_file_uploader"] = True
+
+# Função para verificar e ordenar colunas, incluindo diferentes tipos de dados
 def ordenar_coluna(df, coluna, ascending):
     if coluna == "Horas Extras":
         df["Horas Extras Minutos"] = df["Horas Extras"].apply(convert_time_to_minutes)
@@ -56,7 +60,7 @@ def load_data(uploaded_file, skip_rows=0):
 
         for col in df.columns:
             try:
-                df[col] = pd.to_numeric(df[col], errors='coerce')
+                df[col] = pd.to_numeric(df[col], errors='ignore')
             except Exception:
                 pass
         return df
@@ -122,32 +126,47 @@ def generate_ticks(df, column):
         st.warning(f"Erro ao gerar ticks para o eixo: {e}")
         return [], []
 
-uploaded_file = st.sidebar.file_uploader(
-    "📊 Carregue um arquivo para criar um gráfico",
-    type=["xlsx", "csv"]
-)
+# Restaura a estrutura original com múltiplos expansores
+with st.sidebar.expander(":green[CARREGAR ARQUIVO]", expanded=st.session_state["expand_file_uploader"]):
+    uploaded_file = st.file_uploader(
+        "📊 :green[**Carregue um arquivo para criar um gráfico**]",
+        type=["xlsx", "csv"]
+    )
+    if uploaded_file:
+        st.session_state["expand_file_uploader"] = False
 
 if uploaded_file:
-    skip_rows = st.sidebar.number_input("Linhas a descartar", min_value=0, value=0, step=1)
+    skip_rows = st.sidebar.number_input(
+        ":red[**Linhas**] :blue[**a Descartar**]",
+        min_value=0,
+        value=0,
+        step=1
+    )
     df = load_data(uploaded_file, skip_rows)
 
     if df is not None:
-        x_axis = st.sidebar.selectbox("Eixo X", df.columns)
-        y_axis = st.sidebar.selectbox("Eixo Y", df.columns)
-        color_col = st.sidebar.selectbox("Coluna para cor (opcional)", [None] + list(df.columns))
+        with st.sidebar.expander(":blue[AJUSTAR Colunas e Linhas]", expanded=False):
+            x_axis = st.selectbox(":green[Eixo X]", df.columns)
+            y_axis = st.selectbox(":green[Eixo Y]", df.columns)
+            color_col = st.selectbox(":blue[Coluna para cor] (opcional)", [None] + list(df.columns))
 
-        selected_columns = st.sidebar.multiselect(
-            "Colunas para exibir", df.columns, default=df.columns
-        )
+        with st.sidebar.expander(":red[SELECIONAR Colunas para Exibir]", expanded=False):
+            selected_columns = st.multiselect(
+                ":red[**Exibir colunas**]",
+                df.columns,
+                default=df.columns
+            )
 
-        title = st.sidebar.text_input("Título do Gráfico", "📊 Estatísticas")
-        x_label = st.sidebar.text_input("Rótulo do Eixo X", x_axis)
-        y_label = st.sidebar.text_input("Rótulo do Eixo Y", y_axis)
+        with st.sidebar.expander(":green[RENOMEAR Eixos e Título do Gráfico]", expanded=False):
+            title = st.text_input("Título do Gráfico", "📊 Estatísticas")
+            x_label = st.text_input("Rótulo do Eixo X", x_axis)
+            y_label = st.text_input("Rótulo do Eixo Y", y_axis)
 
-        st.subheader(":green[DADOS Estatísticos]")
         with st.expander(":blue[DADOS EDITAR E VISUALIZAR]", expanded=True):
             st.dataframe(df)
 
         gerar_grafico(df, x_axis, y_axis, color_col, selected_columns, title, x_label, y_label)
     else:
         st.error("Erro: Não foi possível carregar o arquivo.")
+else:
+    st.markdown(get_markdown())
