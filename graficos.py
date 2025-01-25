@@ -196,11 +196,10 @@ def exibir_grafico(uploaded_file=None):
 
         # Expander para Gráfico de Rosca/Pizza
         # Expander para Gráfico de Rosca/Pizza
-        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/donut_small:"):
+        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/chart-pie:"):
             try:
                 if uploaded_file:
                     # Usa o DataFrame ajustado (df_filtered)
-                    # Verifica se as colunas estão definidas
                     if 'df_filtered' in locals():
                         # Selecionar a coluna de valores
                         col_values = st.selectbox(
@@ -214,6 +213,11 @@ def exibir_grafico(uploaded_file=None):
                             df_filtered.columns,
                             help="Selecione a coluna que representará os rótulos do gráfico de pizza."
                         )
+        
+                        # Verifica se a coluna de valores está em formato de tempo
+                        if col_values == "Horas Extras" and "Horas Extras" in df_filtered.columns:
+                            df_filtered["Horas Extras Minutos"] = df_filtered["Horas Extras"].apply(convert_time_to_minutes)
+                            col_values = "Horas Extras Minutos"  # Usa os minutos para o gráfico
         
                         # Gera o gráfico de pizza/rosca
                         if col_values and col_labels:
@@ -232,7 +236,6 @@ def exibir_grafico(uploaded_file=None):
             except Exception as e:
                 st.error(f"Erro ao gerar o gráfico de pizza/rosca: {e}")
         
-
 
 
 
