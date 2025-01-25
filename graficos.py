@@ -219,21 +219,21 @@ def exibir_grafico(uploaded_file=None):
             x_axis = st.selectbox(":blue[**➡️ Eixo X**]", df_filtered.columns)
             y_axis = st.selectbox(":blue[**⬆️ Eixo Y**]", df_filtered.columns)
         
-        # Caso nenhuma coluna tenha sido selecionada para texto nas barras, use y_axis como fallback
-        if text_col is None:
-            text_col = y_axis  # Usa o eixo Y como padrão
-            df_filtered["Texto Barras"] = df_filtered[y_axis].astype(str)
-        
-
-
-            color_col = st.selectbox(
-                ":rainbow[**Coluna para cor**] _(opcional)_",
-                ["Selecione"] + list(df_filtered.columns)
-            )
+            # Caso nenhuma coluna tenha sido selecionada para texto nas barras, use y_axis como fallback
+            if text_col is None:
+                text_col = y_axis  # Usa o eixo Y como padrão
+                df_filtered["Texto Barras"] = df_filtered[y_axis].astype(str)
             
-            # Tratamento caso o usuário não tenha selecionado nenhuma coluna
-            if color_col == "Selecione":
-                color_col = None  # Define como None para compatibilidade com o restante do código
+    
+    
+                color_col = st.selectbox(
+                    ":rainbow[**Coluna para cor**] _(opcional)_",
+                    ["Selecione"] + list(df_filtered.columns)
+                )
+                
+                # Tratamento caso o usuário não tenha selecionado nenhuma coluna
+                if color_col == "Selecione":
+                    color_col = None  # Define como None para compatibilidade com o restante do código
             
 
         # Converter a coluna "Horas Extras" para minutos apenas se ela for escolhida como eixo Y
