@@ -243,49 +243,44 @@ def exibir_grafico(uploaded_file=None):
 
         # Criação do Gráfico Principal
         # Criação do Gráfico Principal
-        # Expander para Gráfico de Rosca/Pizza
-        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/finance:"):
+        if x_axis and y_axis:
+            labels = {x_axis: x_axis, y_axis: y_axis}
+            if color_col:
+                labels[color_col] = color_col  # Adiciona rótulo para a cor
+        
+            fig = px.bar(
+                df_filtered,
+                x=x_axis,
+                y=y_axis,
+                color=color_col,  # Usa o color_col ajustado
+                text=text_col if text_col else None,
+                labels=labels,
+                custom_data=[df_filtered[col].fillna('') for col in selected_columns]
+            )
         
 
+            # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
+            # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
+            fig.update_traces(
+                texttemplate='<b>%{text}</b>' if text_col else None,
+                textposition='inside',  # Garante que o texto apareça dentro das barras
+                hovertemplate="<b>%{x}</b><br>" + "<br>".join(
+                    [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in
+                     enumerate(selected_columns)])
+            )
+            
 
-            if x_axis and y_axis:
-                labels = {x_axis: x_axis, y_axis: y_axis}
-                if color_col:
-                    labels[color_col] = color_col  # Adiciona rótulo para a cor
-            
-                fig = px.bar(
-                    df_filtered,
-                    x=x_axis,
-                    y=y_axis,
-                    color=color_col,  # Usa o color_col ajustado
-                    text=text_col if text_col else None,
-                    labels=labels,
-                    custom_data=[df_filtered[col].fillna('') for col in selected_columns]
+            # Adicionar título e ticks personalizados ao gráfico
+            fig.update_layout(
+                title="📊 Estatísticas",
+                yaxis=dict(
+                    range=[0, None],  # Inicia no zero
+                    tickmode="array",
+                    tickvals=tick_vals,
+                    ticktext=tick_texts,
+                    title="Horas Extras"
                 )
-            
-    
-                # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
-                # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
-                fig.update_traces(
-                    texttemplate='<b>%{text}</b>' if text_col else None,
-                    textposition='inside',  # Garante que o texto apareça dentro das barras
-                    hovertemplate="<b>%{x}</b><br>" + "<br>".join(
-                        [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in
-                         enumerate(selected_columns)])
-                )
-                
-    
-                # Adicionar título e ticks personalizados ao gráfico
-                fig.update_layout(
-                    title="📊 Estatísticas",
-                    yaxis=dict(
-                        range=[0, None],  # Inicia no zero
-                        tickmode="array",
-                        tickvals=tick_vals,
-                        ticktext=tick_texts,
-                        title="Horas Extras"
-                    )
-                )
+            )
 
         # Expander para renomear os eixos e título do gráfico
         with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Título do Gráfico", expanded=False, icon=":material/insert_text:"):
@@ -335,8 +330,10 @@ def exibir_grafico(uploaded_file=None):
                 )
             )
 
-            # Renderizar o gráfico
-            st.plotly_chart(fig, use_container_width=True, key="main_graph")
+            with st.expander(":blue[**GRÁFICO** de Barras]", expanded=False, icon=":material/finance:"):
+
+                # Renderizar o gráfico
+                st.plotly_chart(fig, use_container_width=True, key="main_graph")
 
 
     except Exception as e:
