@@ -195,7 +195,7 @@ def exibir_grafico(uploaded_file=None):
 
 
         # Expander para Gráfico de Rosca/Pizza
-        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/chart-pie:"):
+        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/donut_small:"):
             try:
                 if uploaded_file:
                     # Recarregar o DataFrame caso necessário
