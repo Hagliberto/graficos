@@ -290,12 +290,11 @@ def exibir_grafico(uploaded_file=None):
             text_cols = st.multiselect(
                 ":blue[**Colunas para texto nas barras**]",
                 options=df_filtered.columns,
-                placeholder="Colunas para exibir como texto nas barras",
+                placeholder="📊 Texto nas barras",
                 default=[],  # Nenhuma coluna selecionada por padrão
                 help="Selecione as colunas que deseja exibir como texto dentro das barras"
             )
-
-
+        
         # Criar o texto para as barras
         if text_cols:
             # Concatenar valores das colunas selecionadas em uma nova coluna "Texto Barras"
@@ -304,9 +303,9 @@ def exibir_grafico(uploaded_file=None):
             )
             text_col = "Texto Barras"
         else:
-            # Caso nenhuma coluna seja selecionada, usar os valores do eixo X como padrão
-            df_filtered["Texto Barras"] = df_filtered[x_axis].astype(str)
-            text_col = "Texto Barras"
+            # Não criar texto nas barras quando nenhuma coluna for selecionada
+            df_filtered["Texto Barras"] = ""
+            text_col = None
 
         # Expander para renomear os eixos e título do gráfico
         with st.sidebar.expander(":blue[**RENOMEAR**] Eixos e Título do Gráfico", expanded=False, icon=":material/insert_text:"):
