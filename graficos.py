@@ -193,67 +193,6 @@ def exibir_grafico(uploaded_file=None):
             )
 
 
-
-        # Expander para Gráfico de Rosca/Pizza
-        # Expander para Gráfico de Rosca/Pizza
-        with st.expander(":blue[**GRÁFICO DE ROSCA/PIZZA**]", expanded=False, icon=":material/donut_small:"):
-            try:
-                if uploaded_file:
-                    # Usa o DataFrame ajustado (df_filtered)
-                    if 'df_filtered' in locals():
-                        # Selecionar a coluna de valores
-                        col_values = st.selectbox(
-                            ":blue[**Coluna de Valores**] para o gráfico de pizza",
-                            df_filtered.columns,
-                            help="Selecione a coluna com os valores a serem exibidos no gráfico de pizza."
-                        )
-                        # Selecionar a coluna de rótulos
-                        col_labels = st.selectbox(
-                            ":blue[**Coluna de Rótulos**] para o gráfico de pizza",
-                            df_filtered.columns,
-                            help="Selecione a coluna que representará os rótulos do gráfico de pizza."
-                        )
-        
-                        # Verifica se a coluna de valores está em formato de tempo
-                        if col_values == "Horas Extras" and "Horas Extras" in df_filtered.columns:
-                            df_filtered["Horas Extras Minutos"] = df_filtered["Horas Extras"].apply(convert_time_to_minutes)
-                            df_filtered["Horas Extras Formatadas"] = df_filtered["Horas Extras Minutos"].apply(minutes_to_time)
-                            col_values_minutos = "Horas Extras Minutos"  # Para os cálculos internos
-                            col_values_hhmm = "Horas Extras Formatadas"  # Para exibição no gráfico
-                        else:
-                            col_values_minutos = col_values
-                            col_values_hhmm = None  # Nenhuma formatação extra
-        
-                        # Gera o gráfico de pizza/rosca
-                        if col_values and col_labels:
-                            fig_pizza = px.pie(
-                                df_filtered,
-                                values=col_values_minutos,  # Usa os minutos para os cálculos
-                                names=col_labels,
-                                title="📊 Gráfico de Pizza/Rosca",
-                                hole=0.4,  # Ajusta o buraco para fazer o gráfico de rosca
-                            )
-        
-                            # Atualiza os rótulos para exibir no formato HH:MM
-                            if col_values_hhmm:
-                                fig_pizza.update_traces(
-                                    textinfo="label+percent+value",
-                                    texttemplate="%{label}<br>%{percent}<br>%{customdata}",
-                                    customdata=df_filtered[col_values_hhmm]  # Exibe valores formatados
-                                )
-        
-                            # Renderiza o gráfico
-                            st.plotly_chart(fig_pizza, use_container_width=True)
-                    else:
-                        st.error("O DataFrame ajustado não foi encontrado. Verifique o processamento do arquivo.")
-                else:
-                    st.warning("Nenhum arquivo carregado. Por favor, carregue um arquivo para gerar o gráfico.")
-            except Exception as e:
-                st.error(f"Erro ao gerar o gráfico de pizza/rosca: {e}")
-        
-
-
-
         # Seleção de colunas para texto nas barras
         with st.sidebar.expander(":blue[**TEXTO NAS BARRAS**] _(opcional)_", expanded=False, icon=":material/format_shapes:"):
             text_cols = st.multiselect(
