@@ -330,7 +330,7 @@ def exibir_grafico(uploaded_file=None):
                 )
             )
 
-            with st.expander(":blue[**GRÁFICO** de Barras]", expanded=False, icon=":material/finance:"):
+            with st.expander(":blue[**GRÁFICO**] DE BARRAS", expanded=True, icon=":material/finance:"):
 
                 # Renderizar o gráfico
                 st.plotly_chart(fig, use_container_width=True, key="main_graph")
