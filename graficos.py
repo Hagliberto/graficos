@@ -152,6 +152,9 @@ with col2:
     st.subheader("📉:green[**GRÁFICOS**] Estatísticos", divider="rainbow")
        
 def exibir_grafico(uploaded_file=None):
+    # Inicializa text_col com None
+    text_col = None
+
     if not uploaded_file:
         st.markdown(get_markdown())
         return
@@ -209,70 +212,53 @@ def exibir_grafico(uploaded_file=None):
                 num_rows="dynamic"  # Permite o ajuste dinâmico do número de linhas
             )
 
+        # Seleção de colunas para texto nas barras
+        with st.sidebar.expander(":blue[**TEXTO NAS BARRAS**] _(opcional)_", expanded=False, icon=":material/format_shapes:"):
+            text_cols = st.multiselect(
+                ":blue[**Colunas para texto nas barras**]",
+                options=df_filtered.columns,
+                placeholder="📊 Texto nas barras",
+                default=[],  # Nenhuma coluna selecionada por padrão
+                help="Selecione as colunas que deseja exibir como texto dentro das barras"
+            )
+
+        # Criar o texto para as barras
+        if text_cols:
+            # Concatenar valores das colunas selecionadas em uma nova coluna "Texto Barras"
+            df_filtered["Texto Barras"] = df_filtered[text_cols].apply(
+                lambda row: " | ".join(row.values.astype(str)), axis=1
+            )
+            text_col = "Texto Barras"
+        else:
+            # Não criar texto nas barras quando nenhuma coluna for selecionada
+            df_filtered["Texto Barras"] = ""
+            text_col = None
+
         # Configuração de Gráficos
         with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False, icon=":material/checklist:"):
             x_axis = st.selectbox(":blue[**➡️ Eixo X**]", df_filtered.columns)
             y_axis = st.selectbox(":blue[**⬆️ Eixo Y**]", df_filtered.columns)
-            # color_col = st.selectbox(":rainbow[**Coluna para cor**] _(opcional)_", [None] + list(df_filtered.columns))
-
-
-            color_col = st.selectbox(
-                ":rainbow[**Coluna para cor**] _(opcional)_",
-                ["Selecione"] + list(df_filtered.columns)
-            )
-            
-            # Tratamento caso o usuário não tenha selecionado nenhuma coluna
-            if color_col == "Selecione":
-                color_col = None  # Define como None para compatibilidade com o restante do código
-            
-
-
-
-        # # Converter a coluna "Horas Extras" para minutos
-        # if "Horas Extras" in df_filtered.columns:
-        #     df_filtered["Horas Extras Minutos"] = df_filtered["Horas Extras"].apply(convert_time_to_minutes)
-        #     y_axis = "Horas Extras Minutos"  # Usa a nova coluna para lógica do gráfico
-
-
-        # Converter a coluna "Horas Extras" para minutos apenas se ela for escolhida como eixo Y
-        if y_axis == "Horas Extras" and "Horas Extras" in df_filtered.columns:
-            df_filtered["Horas Extras Minutos"] = df_filtered["Horas Extras"].apply(convert_time_to_minutes)
-            y_axis = "Horas Extras Minutos"  # Usa a nova coluna para lógica do gráfico
-        
-
-
-
-
 
         # Gerar os ticks para o eixo Y
         tick_vals, tick_texts = generate_ticks(df_filtered, y_axis)
 
         # Criação do Gráfico Principal
-        # Criação do Gráfico Principal
         if x_axis and y_axis:
             labels = {x_axis: x_axis, y_axis: y_axis}
-            if color_col:
-                labels[color_col] = color_col
-        
             fig = px.bar(
                 df_filtered,
                 x=x_axis,
                 y=y_axis,
-                color=color_col,
-                text=text_col if text_col and not df_filtered["Texto Barras"].isnull().all() else None,  # Verifica se 'text_col' tem valores
-                labels=labels,
-                custom_data=[df_filtered[col].fillna('') for col in selected_columns]
+                text=text_col,  # `text_col` agora está sempre inicializado
+                labels=labels
             )
-        
+
             # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
             fig.update_traces(
-                texttemplate='<b>%{text}</b>' if text_col and not df_filtered["Texto Barras"].isnull().all() else None,
-                textposition='inside',
-                hovertemplate="<b>%{x}</b><br>" + "<br>".join(
-                    [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in
-                     enumerate(selected_columns)]),
+                texttemplate='<b>%{text}</b>' if text_col else None,
+                textposition='inside'
             )
-        
+
             # Adicionar título e ticks personalizados ao gráfico
             fig.update_layout(
                 title="📊 Estatísticas",
@@ -280,10 +266,16 @@ def exibir_grafico(uploaded_file=None):
                     range=[0, None],  # Inicia no zero
                     tickmode="array",
                     tickvals=tick_vals,
-                    ticktext=tick_texts,
-                    title="Horas Extras"
+                    ticktext=tick_texts
                 )
             )
+
+            # Renderizar o gráfico
+            st.plotly_chart(fig, use_container_width=True)
+
+    except Exception as e:
+        st.error(f"Erro ao processar o arquivo: {e}")
+
         
 
 
