@@ -219,19 +219,18 @@ def exibir_grafico(uploaded_file=None):
         with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False, icon=":material/checklist:"):
             x_axis = st.selectbox(":blue[**➡️ Eixo X**]", df_filtered.columns)
             y_axis = st.selectbox(":blue[**⬆️ Eixo Y**]", df_filtered.columns)
-            
-            # Inicializar color_col como None
-            color_col = None
         
             # Seleção da coluna para cor
             color_col = st.selectbox(
                 ":rainbow[**Coluna para cor**] _(opcional)_",
-                ["Selecione"] + list(df_filtered.columns)
+                ["Selecione"] + list(df_filtered.columns),
+                index=0  # Valor padrão "Selecione"
             )
-            
-            # Tratamento caso o usuário não tenha selecionado nenhuma coluna
+        
+            # Caso nenhuma coluna seja selecionada, use os valores de x e y como padrão
             if color_col == "Selecione":
-                color_col = None  # Define como None para compatibilidade com o restante do código
+                color_col = x_axis  # Usa o eixo X como padrão para colorir
+        
                     
 
         # Converter a coluna "Horas Extras" para minutos apenas se ela for escolhida como eixo Y
@@ -243,20 +242,22 @@ def exibir_grafico(uploaded_file=None):
         tick_vals, tick_texts = generate_ticks(df_filtered, y_axis)
 
         # Criação do Gráfico Principal
+        # Criação do Gráfico Principal
         if x_axis and y_axis:
             labels = {x_axis: x_axis, y_axis: y_axis}
             if color_col:
-                labels[color_col] = color_col
-
+                labels[color_col] = color_col  # Adiciona rótulo para a cor
+        
             fig = px.bar(
                 df_filtered,
                 x=x_axis,
                 y=y_axis,
-                color=color_col,
-                text=text_col if "text_col" in locals() else None,
+                color=color_col,  # Usa o color_col ajustado
+                text=text_col if text_col else None,
                 labels=labels,
                 custom_data=[df_filtered[col].fillna('') for col in selected_columns]
             )
+        
 
             # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
             # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
