@@ -93,26 +93,6 @@ def load_data(uploaded_file, skip_rows=0):
     return df
 
 
-# # Função para carregar os dados do arquivo
-# @st.cache_data
-# def load_data(uploaded_file, skip_rows=0):
-#     if uploaded_file.name.endswith(".csv"):
-#         df = pd.read_csv(uploaded_file, skiprows=skip_rows)
-#     elif uploaded_file.name.endswith(".xlsx"):
-#         df = pd.read_excel(uploaded_file, skiprows=skip_rows)
-#     else:
-#         return None
-
-#     # Conversão automática de colunas com valores numéricos para float/int
-#     for col in df.columns:
-#         try:
-#             df[col] = pd.to_numeric(df[col])  # Tenta converter a coluna para numérico
-#         except ValueError:
-#             # Se a conversão falhar, mantém a coluna como está
-#             st.warning(f"Não foi possível converter a coluna '{col}' para numérico.")
-
-#     return df
-
 # Gera o texto formatado para o tooltip dinamicamente e colorido
 def generate_hovertemplate(selected_columns):
     hover_text = []
@@ -221,7 +201,7 @@ def exibir_grafico(uploaded_file=None):
                 default=[],  # Nenhuma coluna selecionada por padrão
                 help="Selecione as colunas que deseja exibir como texto dentro das barras"
             )
-
+        
         # Criar o texto para as barras
         if text_cols:
             # Concatenar valores das colunas selecionadas em uma nova coluna "Texto Barras"
@@ -230,11 +210,10 @@ def exibir_grafico(uploaded_file=None):
             )
             text_col = "Texto Barras"
         else:
-            # Não criar texto nas barras quando nenhuma coluna for selecionada
-            df_filtered["Texto Barras"] = ""
-            text_col = None
+            # Caso o usuário não escolha texto para as barras, usar o eixo Y por padrão
+            text_col = y_axis  # Use o eixo Y como padrão
+            df_filtered["Texto Barras"] = df_filtered[y_axis].astype(str)
 
-        # Configuração de Gráficos
         # Configuração de Gráficos
         with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False, icon=":material/checklist:"):
             x_axis = st.selectbox(":blue[**➡️ Eixo X**]", df_filtered.columns)
@@ -252,23 +231,10 @@ def exibir_grafico(uploaded_file=None):
                 color_col = None  # Define como None para compatibilidade com o restante do código
             
 
-
-
-        # # Converter a coluna "Horas Extras" para minutos
-        # if "Horas Extras" in df_filtered.columns:
-        #     df_filtered["Horas Extras Minutos"] = df_filtered["Horas Extras"].apply(convert_time_to_minutes)
-        #     y_axis = "Horas Extras Minutos"  # Usa a nova coluna para lógica do gráfico
-
-
         # Converter a coluna "Horas Extras" para minutos apenas se ela for escolhida como eixo Y
         if y_axis == "Horas Extras" and "Horas Extras" in df_filtered.columns:
             df_filtered["Horas Extras Minutos"] = df_filtered["Horas Extras"].apply(convert_time_to_minutes)
             y_axis = "Horas Extras Minutos"  # Usa a nova coluna para lógica do gráfico
-        
-
-
-
-
 
         # Gerar os ticks para o eixo Y
         tick_vals, tick_texts = generate_ticks(df_filtered, y_axis)
@@ -290,13 +256,15 @@ def exibir_grafico(uploaded_file=None):
             )
 
             # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
+            # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
             fig.update_traces(
-                texttemplate='<b>%{text}</b>' if "text_col" in locals() else None,
-                textposition='inside',
+                texttemplate='<b>%{text}</b>' if text_col else None,
+                textposition='inside',  # Garante que o texto apareça dentro das barras
                 hovertemplate="<b>%{x}</b><br>" + "<br>".join(
                     [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in
                      enumerate(selected_columns)])
             )
+            
 
             # Adicionar título e ticks personalizados ao gráfico
             fig.update_layout(
