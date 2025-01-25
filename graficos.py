@@ -306,14 +306,29 @@ def exibir_grafico(uploaded_file=None):
                 custom_data=[df_filtered[col].fillna('') for col in selected_columns]
             )
 
-            # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
+            # # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
+            # fig.update_traces(
+            #     texttemplate='<b>%{text}</b>' if "text_col" in locals() else None,
+            #     textposition='inside',
+            #     hovertemplate="<b>%{x}</b><br>" + "<br>".join(
+            #         [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in
+            #          enumerate(selected_columns)])
+            # )
+
+
+
+
             fig.update_traces(
-                texttemplate='<b>%{text}</b>' if "text_col" in locals() else None,
-                textposition='inside',
+                texttemplate='<b>%{text}</b>' if text_col and text_col in df_filtered.columns else '<b>%{x}</b>',
+                textposition='inside',  # Garante que o texto apareça dentro das barras
                 hovertemplate="<b>%{x}</b><br>" + "<br>".join(
-                    [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in
-                     enumerate(selected_columns)])
+                    [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in enumerate(selected_columns)]
+                ) + "<extra></extra>"  # Remove o texto extra no tooltip
             )
+            
+
+
+
 
             # Adicionar título e ticks personalizados ao gráfico
             fig.update_layout(
