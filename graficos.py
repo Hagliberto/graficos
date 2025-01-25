@@ -215,27 +215,24 @@ def exibir_grafico(uploaded_file=None):
             text_col = None  # Inicializa como None por enquanto
         
         # Configuração de Gráficos
+        # Configuração de Gráficos
         with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False, icon=":material/checklist:"):
             x_axis = st.selectbox(":blue[**➡️ Eixo X**]", df_filtered.columns)
             y_axis = st.selectbox(":blue[**⬆️ Eixo Y**]", df_filtered.columns)
+            
+            # Inicializar color_col como None
+            color_col = None
         
-            # Caso nenhuma coluna tenha sido selecionada para texto nas barras, use y_axis como fallback
-            if text_col is None:
-                text_col = y_axis  # Usa o eixo Y como padrão
-                df_filtered["Texto Barras"] = df_filtered[y_axis].astype(str)
+            # Seleção da coluna para cor
+            color_col = st.selectbox(
+                ":rainbow[**Coluna para cor**] _(opcional)_",
+                ["Selecione"] + list(df_filtered.columns)
+            )
             
-                # Inicializar color_col como None
-                color_col = None    
-    
-                color_col = st.selectbox(
-                    ":rainbow[**Coluna para cor**] _(opcional)_",
-                    ["Selecione"] + list(df_filtered.columns)
-                )
-                
-                # Tratamento caso o usuário não tenha selecionado nenhuma coluna
-                if color_col == "Selecione":
-                    color_col = None  # Define como None para compatibilidade com o restante do código
-            
+            # Tratamento caso o usuário não tenha selecionado nenhuma coluna
+            if color_col == "Selecione":
+                color_col = None  # Define como None para compatibilidade com o restante do código
+                    
 
         # Converter a coluna "Horas Extras" para minutos apenas se ela for escolhida como eixo Y
         if y_axis == "Horas Extras" and "Horas Extras" in df_filtered.columns:
