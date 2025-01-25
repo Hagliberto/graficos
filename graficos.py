@@ -193,6 +193,7 @@ def exibir_grafico(uploaded_file=None):
             )
 
         # Seleção de colunas para texto nas barras
+        # Seleção de colunas para texto nas barras
         with st.sidebar.expander(":blue[**TEXTO NAS BARRAS**] _(opcional)_", expanded=False, icon=":material/format_shapes:"):
             text_cols = st.multiselect(
                 ":blue[**Colunas para texto nas barras**]",
@@ -210,15 +211,19 @@ def exibir_grafico(uploaded_file=None):
             )
             text_col = "Texto Barras"
         else:
-            # Caso o usuário não escolha texto para as barras, usar o eixo Y por padrão
-            text_col = y_axis  # Use o eixo Y como padrão
-            df_filtered["Texto Barras"] = df_filtered[y_axis].astype(str)
-
+            # Adiar a definição de text_col para depois de selecionar y_axis
+            text_col = None  # Inicializa como None por enquanto
+        
         # Configuração de Gráficos
         with st.sidebar.expander(":blue[**ESCOLHER**] Eixos e Legendas", expanded=False, icon=":material/checklist:"):
             x_axis = st.selectbox(":blue[**➡️ Eixo X**]", df_filtered.columns)
             y_axis = st.selectbox(":blue[**⬆️ Eixo Y**]", df_filtered.columns)
-            # color_col = st.selectbox(":rainbow[**Coluna para cor**] _(opcional)_", [None] + list(df_filtered.columns))
+        
+        # Caso nenhuma coluna tenha sido selecionada para texto nas barras, use y_axis como fallback
+        if text_col is None:
+            text_col = y_axis  # Usa o eixo Y como padrão
+            df_filtered["Texto Barras"] = df_filtered[y_axis].astype(str)
+        
 
 
             color_col = st.selectbox(
