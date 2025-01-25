@@ -260,9 +260,9 @@ def exibir_grafico(uploaded_file=None):
         
 
             # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
-            # Configurar o texto para aparecer dentro das barras e ajustar o tooltip
             fig.update_traces(
-                texttemplate='<b>%{text}</b>' if text_col else None,
+                # texttemplate='<b>%{text}</b>' if text_col else None,
+                texttemplate='<b>%{text}</b>' if text_col else '<b>%{x}</b>',
                 textposition='inside',  # Garante que o texto apareça dentro das barras
                 hovertemplate="<b>%{x}</b><br>" + "<br>".join(
                     [f"{col}: <span style='color:blue;'>%{{customdata[{i}]}}</span>" for i, col in
