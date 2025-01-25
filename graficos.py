@@ -224,7 +224,8 @@ def exibir_grafico(uploaded_file=None):
                 text_col = y_axis  # Usa o eixo Y como padrão
                 df_filtered["Texto Barras"] = df_filtered[y_axis].astype(str)
             
-    
+                # Inicializar color_col como None
+                color_col = None    
     
                 color_col = st.selectbox(
                     ":rainbow[**Coluna para cor**] _(opcional)_",
