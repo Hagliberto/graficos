@@ -103,20 +103,24 @@ def gerar_grafico(df, x_axis, y_axis, color_col, selected_columns, title, x_labe
     st.plotly_chart(fig, use_container_width=True)
 
 def generate_ticks(df, column):
-    if column == "Horas Extras Minutos":
-        max_val = int(df[column].max())
-        tick_step = max(30, max_val // 10)
-        tick_vals = list(range(0, max_val + tick_step, tick_step))
-        tick_texts = [minutes_to_time(val) for val in tick_vals]
-        return tick_vals, tick_texts
-    elif pd.api.types.is_numeric_dtype(df[column]):
-        max_val = int(df[column].max())
-        tick_step = max(1, max_val // 10)
-        tick_vals = list(range(0, max_val + tick_step, tick_step))
-        return tick_vals, tick_vals
-    else:
-        unique_vals = df[column].unique()
-        return unique_vals, unique_vals
+    try:
+        if column == "Horas Extras Minutos":
+            max_val = int(df[column].max())
+            tick_step = max(30, max_val // 10)
+            tick_vals = list(range(0, max_val + tick_step, tick_step))
+            tick_texts = [minutes_to_time(val) for val in tick_vals]
+            return tick_vals, tick_texts
+        elif pd.api.types.is_numeric_dtype(df[column]):
+            max_val = int(df[column].max())
+            tick_step = max(1, max_val // 10)
+            tick_vals = list(range(0, max_val + tick_step, tick_step))
+            return tick_vals, tick_vals
+        else:
+            unique_vals = df[column].unique()
+            return unique_vals, unique_vals
+    except Exception as e:
+        st.warning(f"Erro ao gerar ticks para o eixo: {e}")
+        return [], []
 
 uploaded_file = st.sidebar.file_uploader(
     "📊 Carregue um arquivo para criar um gráfico",
@@ -139,6 +143,10 @@ if uploaded_file:
         title = st.sidebar.text_input("Título do Gráfico", "📊 Estatísticas")
         x_label = st.sidebar.text_input("Rótulo do Eixo X", x_axis)
         y_label = st.sidebar.text_input("Rótulo do Eixo Y", y_axis)
+
+        st.subheader(":green[DADOS Estatísticos]")
+        with st.expander(":blue[DADOS EDITAR E VISUALIZAR]", expanded=True):
+            st.dataframe(df)
 
         gerar_grafico(df, x_axis, y_axis, color_col, selected_columns, title, x_label, y_label)
     else:
