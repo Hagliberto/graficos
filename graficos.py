@@ -207,12 +207,37 @@ def exibir_grafico(uploaded_file=None):
             if primary_col:
                 df = df[[primary_col] + [col for col in df.columns if col != primary_col]]
 
+            # # Filtro de valores nulos
+            # filter_col = st.selectbox(":red[**Excluir**] :blue[**Valores Nulos**]", [None] + list(df.columns), help="Selecione a coluna para filtrar valores nulos")
+            # if filter_col:
+            #     df[filter_col] = df[filter_col].replace("00:00", pd.NA)
+            #     df = df.dropna(subset=[filter_col])
+            #     df = df.reset_index(drop=True)
+
+
+
             # Filtro de valores nulos
             filter_col = st.selectbox(":red[**Excluir**] :blue[**Valores Nulos**]", [None] + list(df.columns), help="Selecione a coluna para filtrar valores nulos")
+            
             if filter_col:
                 df[filter_col] = df[filter_col].replace("00:00", pd.NA)
+            
+                # Converter para tipo numérico se possível (para lidar com 0 e 1)
+                if df[filter_col].dtype == "object":
+                    df[filter_col] = pd.to_numeric(df[filter_col], errors="ignore")
+            
+                # Tratar colunas booleanas (False e 0 como nulos)
+                if df[filter_col].dtype == "bool":
+                    df[filter_col] = df[filter_col].replace({False: pd.NA})
+                elif df[filter_col].dtype in ["int64", "float64"]:
+                    df[filter_col] = df[filter_col].replace({0: pd.NA})
+            
+                # Remover valores nulos
                 df = df.dropna(subset=[filter_col])
                 df = df.reset_index(drop=True)
+            
+
+
 
             # Ordenação do eixo X
             sort_col_x = st.selectbox(":green[**Ordenar**] :blue[**eixo X por**]", options=df.columns, index=0, help="Selecione a coluna para ordenar")
